@@ -1,0 +1,27 @@
+[global_config]
+  title_font = Ubuntu 5
+[keybindings]
+  new_tab = <Primary>t
+  cycle_next = <Ctrl>Page_Down
+  cycle_prev = <Ctrl>Page_Up
+  close_term = <Primary>w
+  next_tab = <Ctrl>Tab
+  prev_tab = <Primary><Shift>Tab
+[profiles]
+  [[default]]
+    background_darkness = 0.9
+    background_type = transparent
+    cursor_color = "#aaaaaa"
+    font = Monospace 11
+[layouts]
+  [[default]]
+    [[[window0]]]
+      type = Window
+      parent = ""
+      geometry = 1100x650
+    [[[child0]]]
+      type = Terminal
+      parent = window0
+      profile = default
+      directory = ""
+[plugins]

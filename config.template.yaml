@@ -1,0 +1,51 @@
+user:
+  name: "Anton B"
+  github_email: ""
+  github_username: "antonbsa"
+  ssh:
+    generate: true
+    key_type: "ed25519"
+    comment: ""
+
+system:
+  localization:
+    timezone: "America/Sao_Paulo"
+    locale: "en_US.UTF-8"
+    keyboard_layout: "us"
+
+installation:
+  common_packages: true
+  browsers:
+    chromium: false
+    google_chrome: true
+  editors:
+    vscode: true
+    vim: false
+    zed: false
+  terminals:
+    terminator: true
+  docker: true
+  nodejs: true
+  python: true
+  java: false
+  slack: true
+  discord: true
+  obsidian: true
+  spotify: false
+  vlc: true
+
+git:
+  setup: true
+  default_branch: "main"
+  gpg_signing: false
+  gpg_key: ""
+
+gnome:
+  configure: true
+  settings:
+    disable_animations: false
+    dock_position: "LEFT"
+    favorite_apps:
+      - brave-browser.desktop
+      - terminator.desktop
+      - code.desktop

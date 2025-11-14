@@ -1,0 +1,29 @@
+[[work-setup]]
+  [[[child0]]]
+    type = Window
+    parent = ""
+    order = 0
+    position = 26:23
+    maximised = False
+    fullscreen = False
+    size = 1100, 650
+    title = pc-20@pc-20:~/{DEFAULT_BBB_CONTAINER}/bigbluebutton
+    active_page = 1
+  [[[child1]]]
+    type = Notebook
+    parent = child0
+    order = 0
+    labels = container, {DEFAULT_BBB_CONTAINER}
+    last_active_term = e4b52a3c-9c36-41c2-a934-932ccd243d8e, c4ebfc32-e81e-432b-8906-8a7b00bbebb7
+  [[[terminal2]]]
+    type = Terminal
+    parent = child1
+    order = 0
+    profile = default
+    directory = {USER_HOME}
+  [[[terminal3]]]
+    type = Terminal
+    parent = child1
+    order = 1
+    profile = default
+    directory = {USER_HOME}/{DEFAULT_BBB_CONTAINER}/bigbluebutton
