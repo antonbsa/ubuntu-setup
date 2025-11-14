@@ -1,0 +1,41 @@
+{
+  "name": "ubuntu-setup",
+  "version": "1.0.0",
+  "description": "Comprehensive, automated setup script for configuring a fresh Ubuntu installation with all essential development tools",
+  "main": "main.sh",
+  "scripts": {
+    "setup": "./main.sh",
+    "summary": "./SUMMARY.sh",
+    "test": "bash -n main.sh && bash -n scripts/*.sh && echo '✓ All scripts have valid syntax'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/antonbsa/ubuntu-setup.git"
+  },
+  "keywords": [
+    "ubuntu",
+    "setup",
+    "automation",
+    "development",
+    "configuration",
+    "bash",
+    "shell-script",
+    "developer-tools",
+    "docker",
+    "nodejs",
+    "vscode",
+    "gnome"
+  ],
+  "author": "Anton B <antonbsa.bck@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/antonbsa/ubuntu-setup/issues"
+  },
+  "homepage": "https://github.com/antonbsa/ubuntu-setup#readme",
+  "os": [
+    "linux"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

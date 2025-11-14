@@ -1,0 +1,25 @@
+# User configuration (contains personal data)
+config.yaml
+
+# Log files
+*.log
+ubuntu-setup.log
+
+# Backups
+*.backup.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+temp/
+tmp/

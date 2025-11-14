@@ -1,51 +1,166 @@
+# =============================================================================
+# Ubuntu Developer Setup - Configuration File
+# =============================================================================
+# Copy this file to config.yaml and customize according to your preferences.
+# All boolean values default to 'true' unless specified as 'false'.
+# =============================================================================
+
+# =============================================================================
+# User Information
+# =============================================================================
 user:
   name: "Anton B"
-  github_email: ""
-  github_username: "antonbsa"
+  github_email: ""  # Used for Git config and SSH key comment
+  github_username: "antonbsa"  # Used for cloning personal repositories
+  
+  # SSH Key Configuration
   ssh:
-    generate: true
-    key_type: "ed25519"
-    comment: ""
+    generate: true  # Set to false to skip SSH key generation
+    key_type: "ed25519"  # Options: ed25519, rsa, ecdsa
+    comment: ""  # Leave empty to use github_email
 
+# =============================================================================
+# System Localization Settings
+# =============================================================================
 system:
   localization:
-    timezone: "America/Sao_Paulo"
-    locale: "en_US.UTF-8"
-    keyboard_layout: "us"
+    timezone: "America/Sao_Paulo"  # e.g., America/New_York, Europe/London
+    locale: "en_US.UTF-8"  # System locale
+    keyboard_layout: "us"  # Keyboard layout
 
+# =============================================================================
+# Installation Options
+# =============================================================================
 installation:
+  # Core system packages (build-essential, curl, wget, etc.)
   common_packages: true
+  
+  # Web Browsers
   browsers:
     chromium: false
     google_chrome: true
+  
+  # Code Editors
   editors:
     vscode: true
-    vim: false
-    zed: false
+  
+  # Terminal Emulators
   terminals:
     terminator: true
+  
+  # Development Tools
   docker: true
-  nodejs: true
+  nodejs: true  # Installs NVM and Node.js LTS
   python: true
   java: false
+  
+  # Communication Apps
   slack: true
   discord: true
+  
+  # Productivity Apps
   obsidian: true
-  spotify: false
+  peek: true  # Screen recorder
   vlc: true
+  spotify: false
+  
+  # API Development Tools
+  insomnia: true  # API client
+  
+  # Screenshot Tools
+  flameshot: true
+  
+  # Terminal Utilities
+  terminal_tools:
+    bat: true
+    htop: true
+    tmux: true
+    jq: true
+  
+  # NPM Global Packages
+  npm_packages:
+    typescript: true
+    playwright: true  # Includes browser installation
 
+# =============================================================================
+# Git Configuration
+# =============================================================================
 git:
-  setup: true
-  default_branch: "main"
-  gpg_signing: false
-  gpg_key: ""
+  setup: true  # Configure Git settings
+  default_branch: "main"  # Default branch name for new repositories
+  gpg_signing: false  # Enable GPG commit signing
+  gpg_key: ""  # GPG key ID (if gpg_signing is true)
 
+# =============================================================================
+# GNOME Desktop Settings
+# =============================================================================
 gnome:
-  configure: true
+  configure: true  # Apply GNOME customizations
+  
   settings:
-    disable_animations: false
-    dock_position: "LEFT"
-    favorite_apps:
-      - brave-browser.desktop
-      - terminator.desktop
-      - code.desktop
+    # Appearance
+    dark_mode: true
+    
+    # Performance
+    power_mode: "performance"  # Options: performance, balanced, power-saver
+    
+    # Dock Settings
+    dock_icon_size: 30
+    
+    # Power Management
+    suspend_timeout: 6000  # seconds (100 minutes)
+    
+    # Night Light
+    night_light:
+      enabled: true
+      schedule_from: 17.5  # 17:30 (24-hour format, decimal)
+      schedule_to: 8.0     # 08:00
+      temperature: 3700    # Color temperature (~33% warmth)
+
+# =============================================================================
+# System Security Settings
+# =============================================================================
+security:
+  enable_firewall: true  # Enable and configure UFW
+  bluetooth_a2dp_fix: true  # Install script to force A2DP profile
+
+# =============================================================================
+# Workspace Setup
+# =============================================================================
+workspace:
+  # Create ~/www folder structure
+  create_www_folder: true
+  
+  # Clone personal repositories
+  repositories:
+    obsidian_notes: ""  # Git URL to clone Obsidian vault (leave empty to skip)
+  
+  # ZSH Configuration
+  zsh:
+    install_oh_my_zsh: true
+    set_as_default_shell: true
+
+# =============================================================================
+# BBB (BigBlueButton) Job-Specific Setup
+# =============================================================================
+# This section is optional and will only run if confirmed during setup
+bbb:
+  enabled: false  # Will ask for confirmation during setup even if true
+  
+  setup:
+    clone_docker_dev: true  # Clone iMDT/bbb-docker-dev
+    create_shared_folder: true  # Create ~/www/bbb/shared
+    copy_setup_script: true  # Copy bbb-setup.sh to home directory
+    append_aliases: true  # Add BBB-specific aliases to ZSH
+    configure_terminator_layout: true  # Add BBB work-setup layout
+    
+  # BBB versions to set up (will prompt during installation)
+  versions:
+    - "v3.0"
+    - "v3.1"
+  
+  # Container settings
+  container:
+    cpu_limit: "auto"  # Use all but one CPU core
+    ulimit_nofile: 5000
+    username_suffix: "anton"  # Container names: bbb30-anton, bbb31-anton
