@@ -2,6 +2,7 @@
 # TODO: log all aliases (+their commands maybe)
 # TODO: log alias command
 # TODO: update aliases from this gist
+alias upall='sudo apt update && sudo apt full-upgrade -y && sudo apt autoremove -y'
 
 # GIT
 # TODO check for oh-my-zsh git aliases and remove duplicated - https://kapeli.com/cheat_sheets/Oh-My-Zsh_Git.docset/Contents/Resources/Documents/index
