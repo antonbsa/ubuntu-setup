@@ -4,6 +4,10 @@
 # TODO: update aliases from this gist
 alias upall='sudo apt update && sudo apt full-upgrade -y && sudo apt autoremove -y'
 
+# Codex
+export EDITOR="code --wait"
+export VISUAL="code --wait"
+
 # GIT
 # TODO check for oh-my-zsh git aliases and remove duplicated - https://kapeli.com/cheat_sheets/Oh-My-Zsh_Git.docset/Contents/Resources/Documents/index
 alias gita='git add .'
