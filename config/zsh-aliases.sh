@@ -7,6 +7,7 @@ alias upall='sudo apt update && sudo apt full-upgrade -y && sudo apt autoremove 
 # Codex
 export EDITOR="code --wait"
 export VISUAL="code --wait"
+export GIT_EDITOR=nano	# keep default CLI editor for commit messages
 
 # GIT
 # TODO check for oh-my-zsh git aliases and remove duplicated - https://kapeli.com/cheat_sheets/Oh-My-Zsh_Git.docset/Contents/Resources/Documents/index
