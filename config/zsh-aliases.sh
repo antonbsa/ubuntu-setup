@@ -25,6 +25,9 @@ alias gitbu='git fetch --all; git pull upstream $(git branch --show-current)'
 alias gitcwip='git add --all; git commit -m "wip" --no-verify'
 alias gitremotefix='git remote rename origin upstream; git remote add origin git@github.com:antonbsa/bigbluebutton.git'
 
+# ESST
+multidev='./docker/multidev'
+
 # Code review
 function checkpr() {
 	# checkpr [PR-ID]* [BRANCH_NAME]
