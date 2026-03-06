@@ -21,7 +21,7 @@ alias gitca='git commit --amend -m "$@"'
 alias gitrs='git restore --staged "$@"'
 alias gitpo='git push origin'
 alias gitpp='git push --set-upstream origin $(git branch --show-current)'
-alias gitbu='git fetch --all; git pull upstream $(git branch --show-current)'
+alias gitbu='git fetch origin; git fetch upstream; git pull upstream $(git branch --show-current)'
 alias gitcwip='git add --all; git commit -m "wip" --no-verify'
 alias gitremotefix='git remote rename origin upstream; git remote add origin git@github.com:antonbsa/bigbluebutton.git'
 
