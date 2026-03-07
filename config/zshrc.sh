@@ -1,4 +1,4 @@
-# keybinding to remove entire previous word by CTRL+Backspace 
+# keybinding to remove entire previous word by CTRL+Backspace
 bindkey '^H' backward-kill-word
 
 # Codex variables for using vscode as external editor

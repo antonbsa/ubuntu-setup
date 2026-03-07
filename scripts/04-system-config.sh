@@ -151,30 +151,45 @@ configure_gnome() {
 
 setup_zsh_aliases() {
     log_info "Setting up ZSH aliases..."
-    
+
     local aliases_source="$SCRIPT_DIR/../config/zsh-aliases.sh"
+    local zshrc_before_source="$SCRIPT_DIR/../config/zshrc-before-source.sh"
+    local zshrc_after_source="$SCRIPT_DIR/../config/zshrc.sh"
     local zshrc="$HOME/.zshrc"
-    
+
     if [[ ! -f "$aliases_source" ]]; then
         log_error "Aliases file not found at $aliases_source"
         return 1
     fi
-    
+
     if [[ ! -f "$zshrc" ]]; then
         log_warning ".zshrc not found. Creating..."
         touch "$zshrc"
     fi
-    
+
     # Check if aliases are already sourced
     if grep -q "source.*zsh-aliases.sh" "$zshrc"; then
         log_warning "ZSH aliases already configured in .zshrc. Skipping."
         return 0
     fi
-    
+
     # Copy aliases file to home directory
     cp "$aliases_source" "$HOME/.zsh-aliases.sh"
-    
-    # Add source command to .zshrc
+
+    # Insert before-source content right before "source $ZSH/oh-my-zsh.sh"
+    if [[ -f "$zshrc_before_source" ]]; then
+        if grep -q 'source \$ZSH/oh-my-zsh.sh' "$zshrc"; then
+            local source_line_num
+            source_line_num=$(grep -n 'source \$ZSH/oh-my-zsh.sh' "$zshrc" | head -1 | cut -d: -f1)
+            sed -i "$((source_line_num - 1))r $zshrc_before_source" "$zshrc"
+        else
+            log_warning "Could not find 'source \$ZSH/oh-my-zsh.sh' in .zshrc. Appending before-source content at the end."
+            printf '\n' >> "$zshrc"
+            cat "$zshrc_before_source" >> "$zshrc"
+        fi
+    fi
+
+    # Append aliases source and zshrc.sh content at the end
     cat >> "$zshrc" << 'EOF'
 
 # Custom aliases
@@ -182,7 +197,12 @@ if [ -f ~/.zsh-aliases.sh ]; then
     source ~/.zsh-aliases.sh
 fi
 EOF
-    
+
+    if [[ -f "$zshrc_after_source" ]]; then
+        printf '\n' >> "$zshrc"
+        cat "$zshrc_after_source" >> "$zshrc"
+    fi
+
     log_success "ZSH aliases configured successfully"
 }
 
