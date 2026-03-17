@@ -3,6 +3,7 @@
 # TODO: log alias command
 # TODO: update aliases from this gist
 alias upall='sudo apt update && sudo apt full-upgrade -y && sudo apt autoremove -y'
+alias cleanup-snaps='snap list --all | awk '\''/disabled/{print $1, $3}'\'' | while read snapname revision; do sudo snap remove "$snapname" --revision="$revision"; done'
 
 # Codex
 export EDITOR="code --wait"
