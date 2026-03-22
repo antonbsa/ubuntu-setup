@@ -308,7 +308,12 @@ append_bbb_terminator_layout() {
 
 setup_bbb_job() {
     log_section "BBB JOB SETUP"
-    
+
+    if ! check_config_enabled ".bbb.enabled" "$CONFIG_FILE"; then
+        log_info "BBB job setup is disabled in config. Skipping."
+        return 0
+    fi
+
     # Ask for confirmation before proceeding
     if ! ask_confirmation "Do you want to proceed with BBB job setup?"; then
         log_info "BBB job setup skipped by user."
