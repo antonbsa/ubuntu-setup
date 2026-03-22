@@ -21,17 +21,33 @@ set -e  # Exit on error
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPTS_DIR="$SCRIPT_DIR/scripts"
 
-# Source utilities and section scripts
+# Source utilities
 source "$SCRIPTS_DIR/utils.sh"
-source "$SCRIPTS_DIR/01-core-system.sh"
-source "$SCRIPTS_DIR/02-dev-tools.sh"
-source "$SCRIPTS_DIR/03-productivity-tools.sh"
-source "$SCRIPTS_DIR/04-system-config.sh"
-source "$SCRIPTS_DIR/05-bbb-setup.sh"
 
 # Configuration file
 CONFIG_FILE="$SCRIPT_DIR/config.yaml"
 CONFIG_TEMPLATE="$SCRIPT_DIR/config.template.yaml"
+DRY_RUN=0
+
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --dry-run)
+                DRY_RUN=1
+                ;;
+            -h|--help)
+                echo "Usage: ./main.sh [--dry-run]"
+                exit 0
+                ;;
+            *)
+                log_error "Unknown argument: $1"
+                echo "Usage: ./main.sh [--dry-run]"
+                exit 1
+                ;;
+        esac
+        shift
+    done
+}
 
 ensure_yq() {
     if command -v yq &> /dev/null; then
@@ -122,6 +138,17 @@ preflight_checks() {
     fi
 
     log_success "Configuration file found: $CONFIG_FILE"
+
+    if is_dry_run; then
+        if ! command -v yq &> /dev/null; then
+            log_error "Dry-run mode requires yq to already be installed."
+            exit 1
+        fi
+
+        log_info "Dry-run mode enabled. Skipping sudo validation and system changes."
+        log_success "Pre-flight checks completed"
+        return 0
+    fi
 
     # Check for sudo access
     if ! sudo -v; then
@@ -226,27 +253,43 @@ display_config_summary() {
 main_installation() {
     log_section "STARTING UBUNTU SETUP"
 
+    if is_dry_run; then
+        log_section "DRY RUN MODE"
+        log_info "No changes will be made. The setup would perform the following sections:"
+        log_info "Would run Section A: Core System Setup"
+        log_info "Would run Section B: Development Tools"
+        log_info "Would run Section C: Productivity Tools"
+        log_info "Would run Section D: System Configuration"
+        log_info "Would run Section E: BBB Job Setup (optional)"
+        return 0
+    fi
+
     local start_time
     start_time=$(date +%s)
 
     # Section A: Core System Setup
     log_info "Running Section A: Core System Setup"
+    source "$SCRIPTS_DIR/01-core-system.sh"
     setup_core_system "$CONFIG_FILE"
 
     # Section B: Development Tools
     log_info "Running Section B: Development Tools"
+    source "$SCRIPTS_DIR/02-dev-tools.sh"
     setup_dev_tools "$CONFIG_FILE"
 
     # Section C: Productivity Tools
     log_info "Running Section C: Productivity Tools"
+    source "$SCRIPTS_DIR/03-productivity-tools.sh"
     setup_productivity_tools "$CONFIG_FILE"
 
     # Section D: System Configuration
     log_info "Running Section D: System Configuration"
+    source "$SCRIPTS_DIR/04-system-config.sh"
     setup_system_configuration "$CONFIG_FILE"
 
     # Section E: BBB Job Setup (optional)
     log_info "Running Section E: BBB Job Setup (optional)"
+    source "$SCRIPTS_DIR/05-bbb-setup.sh"
     setup_bbb_job "$CONFIG_FILE"
 
     local end_time
@@ -265,6 +308,11 @@ main_installation() {
 
 final_summary() {
     log_section "SETUP SUMMARY"
+
+    if is_dry_run; then
+        log_info "Dry-run completed successfully. No changes were applied."
+        return 0
+    fi
 
     # Display apps requiring user interaction
     print_interaction_summary
@@ -286,6 +334,12 @@ final_summary() {
 # =============================================================================
 
 main() {
+    parse_args "$@"
+
+    if is_dry_run; then
+        LOG_FILE="/dev/null"
+    fi
+
     # Initialize logging
     init_log
 
@@ -302,10 +356,12 @@ main() {
     # Display configuration summary
     display_config_summary
 
-    # Ask for final confirmation
-    if ! ask_confirmation "Do you want to proceed with the installation?" "y"; then
-        log_info "Installation cancelled by user"
-        exit 0
+    if ! is_dry_run; then
+        # Ask for final confirmation
+        if ! ask_confirmation "Do you want to proceed with the installation?" "y"; then
+            log_info "Installation cancelled by user"
+            exit 0
+        fi
     fi
 
     # Run main installation

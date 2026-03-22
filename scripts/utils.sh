@@ -206,6 +206,10 @@ print_interaction_summary() {
 # Initialize Log File
 # =============================================================================
 
+is_dry_run() {
+    [[ "${DRY_RUN:-0}" == "1" ]]
+}
+
 init_log() {
     echo "========================================" >> "$LOG_FILE"
     echo "Ubuntu Setup Script - Started at ${TIMESTAMP}" >> "$LOG_FILE"

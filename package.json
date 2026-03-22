@@ -5,7 +5,9 @@
   "main": "main.sh",
   "scripts": {
     "setup": "./main.sh",
-    "test": "bash -n main.sh && bash -n scripts/*.sh && echo '\u2713 All scripts have valid syntax'"
+    "dry-run": "./main.sh --dry-run",
+    "validate": "bash scripts/validate.sh",
+    "test": "bash scripts/validate.sh"
   },
   "repository": {
     "type": "git",

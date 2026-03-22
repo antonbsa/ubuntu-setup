@@ -102,6 +102,12 @@ chmod +x main.sh
 ./main.sh
 ```
 
+Preview the setup without making changes:
+
+```bash
+./main.sh --dry-run
+```
+
 The script will:
 1. Perform pre-flight checks
 2. Display a configuration summary
@@ -137,6 +143,20 @@ Edit `scripts/04-system-config.sh` in the `configure_gnome()` function.
 1. Add installation function to appropriate script in `scripts/`
 2. Add configuration option to `config.template.yaml`
 3. Call the function from the script's main function
+
+## ✅ Validation
+
+Run the built-in validation suite:
+
+```bash
+npm test
+```
+
+Or preview the setup without applying changes:
+
+```bash
+npm run dry-run
+```
 
 ## 📝 Logging
 
