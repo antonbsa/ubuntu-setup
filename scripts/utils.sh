@@ -60,19 +60,19 @@ log_section() {
 ask_confirmation() {
     local message="$1"
     local default="${2:-n}" # Default to 'n' if not provided
-    
+
     if [[ "$default" == "y" ]]; then
         prompt="[Y/n]"
     else
         prompt="[y/N]"
     fi
-    
+
     echo -e "${YELLOW}$message $prompt${NC}"
     read -r response
-    
+
     # Use default if empty
     response=${response:-$default}
-    
+
     if [[ "$response" =~ ^[Yy]$ ]]; then
         log_info "User confirmed: $message"
         return 0
@@ -88,7 +88,7 @@ ask_confirmation() {
 
 is_installed() {
     local package="$1"
-    
+
     if command -v "$package" &> /dev/null; then
         return 0
     elif dpkg -l | grep -q "^ii  $package "; then
@@ -101,7 +101,7 @@ is_installed() {
 check_and_log_installed() {
     local package="$1"
     local display_name="${2:-$package}"
-    
+
     if is_installed "$package"; then
         log_warning "$display_name is already installed. Skipping."
         return 0
@@ -118,23 +118,22 @@ check_and_log_installed() {
 get_config_value() {
     local key="$1"
     local config_file="$2"
-    
-    # Use yq to parse YAML if available, otherwise use grep/sed
-    if command -v yq &> /dev/null; then
-        yq eval "$key" "$config_file" 2>/dev/null
-    else
-        # Fallback to basic grep/sed parsing
-        grep -A1 "$key" "$config_file" | tail -n1 | sed 's/.*: //' | tr -d '"' | tr -d "'"
+
+    if ! command -v yq &> /dev/null; then
+        log_error "yq is required to read configuration values. Please re-run pre-flight checks."
+        return 1
     fi
+
+    yq eval "$key" "$config_file" 2>/dev/null
 }
 
 check_config_enabled() {
     local key="$1"
     local config_file="$2"
     local value
-    
+
     value=$(get_config_value "$key" "$config_file")
-    
+
     if [[ "$value" == "true" ]]; then
         return 0
     else
@@ -148,7 +147,7 @@ check_config_enabled() {
 
 backup_file() {
     local file="$1"
-    
+
     if [[ -f "$file" ]]; then
         local backup="${file}.backup.$(date +%Y%m%d_%H%M%S)"
         cp "$file" "$backup"
@@ -167,7 +166,7 @@ backup_file() {
 handle_error() {
     local exit_code=$?
     local message="$1"
-    
+
     if [[ $exit_code -ne 0 ]]; then
         log_error "$message (Exit code: $exit_code)"
         return 1
@@ -192,13 +191,13 @@ print_interaction_summary() {
         log_section "SOFTWARE REQUIRING USER INTERACTION"
         echo -e "${YELLOW}The following applications require manual login/setup:${NC}"
         echo ""
-        
+
         for item in "${REQUIRES_USER_INTERACTION[@]}"; do
             IFS='|' read -r app reason <<< "$item"
             echo -e "  ${GREEN}•${NC} ${BLUE}$app${NC}: $reason"
             echo "  • $app: $reason" >> "$LOG_FILE"
         done
-        
+
         echo ""
     fi
 }
