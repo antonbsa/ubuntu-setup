@@ -168,6 +168,22 @@ display_config_summary() {
         echo -e "  ${GREEN}✓${NC} Terminator"
     fi
 
+    if check_config_enabled ".installation.peek" "$CONFIG_FILE"; then
+        echo -e "  ${GREEN}✓${NC} Peek"
+    fi
+
+    if check_config_enabled ".installation.insomnia" "$CONFIG_FILE"; then
+        echo -e "  ${GREEN}✓${NC} Insomnia"
+    fi
+
+    if check_config_enabled ".installation.flameshot" "$CONFIG_FILE"; then
+        echo -e "  ${GREEN}✓${NC} Flameshot"
+    fi
+
+    if check_config_enabled ".installation.terminal_tools.bat" "$CONFIG_FILE" ||        check_config_enabled ".installation.terminal_tools.htop" "$CONFIG_FILE" ||        check_config_enabled ".installation.terminal_tools.tmux" "$CONFIG_FILE" ||        check_config_enabled ".installation.terminal_tools.jq" "$CONFIG_FILE"; then
+        echo -e "  ${GREEN}✓${NC} Terminal tools"
+    fi
+
     if check_config_enabled ".installation.slack" "$CONFIG_FILE"; then
         echo -e "  ${GREEN}✓${NC} Slack"
     fi

@@ -79,13 +79,18 @@ EOF
 
 install_peek() {
     log_info "Installing Peek..."
-    
+
+    if ! check_config_enabled ".installation.peek" "$CONFIG_FILE"; then
+        log_warning "Peek installation is disabled in config. Skipping."
+        return 0
+    fi
+
     if check_and_log_installed "peek" "Peek"; then
         return 0
     fi
-    
+
     sudo apt install -y peek
-    
+
     log_success "Peek installed successfully"
 }
 
@@ -116,23 +121,30 @@ install_vlc() {
 
 install_terminal_tools() {
     log_info "Installing terminal tools..."
-    
-    if ! check_config_enabled ".installation.terminal_tools" "$CONFIG_FILE"; then
-        log_warning "Terminal tools installation is disabled in config. Skipping."
+
+    local tools=("bat" "htop" "tmux" "jq")
+    local enabled_tools=()
+
+    for tool in "${tools[@]}"; do
+        if check_config_enabled ".installation.terminal_tools.${tool}" "$CONFIG_FILE"; then
+            enabled_tools+=("$tool")
+        fi
+    done
+
+    if [[ ${#enabled_tools[@]} -eq 0 ]]; then
+        log_warning "All terminal tools are disabled in config. Skipping."
         return 0
     fi
-    
-    local tools=("bat" "htop" "tmux" "curl" "wget" "jq")
-    
-    for tool in "${tools[@]}"; do
+
+    for tool in "${enabled_tools[@]}"; do
         if check_and_log_installed "$tool" "$tool"; then
             continue
         fi
-        
+
         log_info "Installing $tool..."
         sudo apt install -y "$tool"
     done
-    
+
     log_success "Terminal tools installed successfully"
 }
 

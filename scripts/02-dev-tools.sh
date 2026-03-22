@@ -168,17 +168,22 @@ install_chrome() {
 
 install_insomnia() {
     log_info "Installing Insomnia..."
-    
+
+    if ! check_config_enabled ".installation.insomnia" "$CONFIG_FILE"; then
+        log_warning "Insomnia installation is disabled in config. Skipping."
+        return 0
+    fi
+
     if check_and_log_installed "insomnia" "Insomnia"; then
         return 0
     fi
-    
+
     # Add Insomnia repository
     echo "deb [trusted=yes arch=amd64] https://download.konghq.com/insomnia-ubuntu/ default all" | sudo tee /etc/apt/sources.list.d/insomnia.list
-    
+
     sudo apt update
     sudo apt install -y insomnia
-    
+
     log_success "Insomnia installed successfully"
 }
 
@@ -269,13 +274,18 @@ install_zsh() {
 
 install_flameshot() {
     log_info "Installing Flameshot..."
-    
+
+    if ! check_config_enabled ".installation.flameshot" "$CONFIG_FILE"; then
+        log_warning "Flameshot installation is disabled in config. Skipping."
+        return 0
+    fi
+
     if check_and_log_installed "flameshot" "Flameshot"; then
         return 0
     fi
-    
+
     sudo apt install -y flameshot
-    
+
     # Add keyboard shortcuts
     log_info "Setting up Flameshot keyboard shortcuts..."
     
@@ -345,30 +355,47 @@ setup_ssh_keys() {
 
 install_npm_global_packages() {
     log_info "Installing NPM global packages..."
-    
+
     if ! check_config_enabled ".installation.nodejs" "$CONFIG_FILE"; then
         log_warning "Node.js installation is disabled in config. Skipping NPM packages."
         return 0
     fi
-    
+
+    local install_typescript
+    local install_playwright
+
+    install_typescript=$(get_config_value ".installation.npm_packages.typescript" "$CONFIG_FILE")
+    install_playwright=$(get_config_value ".installation.npm_packages.playwright" "$CONFIG_FILE")
+
+    if [[ "$install_typescript" != "true" && "$install_playwright" != "true" ]]; then
+        log_warning "All NPM global packages are disabled in config. Skipping."
+        return 0
+    fi
+
     # Ensure NVM is loaded
     export NVM_DIR="$HOME/.nvm"
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-    
+
     if ! command -v npm &> /dev/null; then
         log_error "NPM is not available. Please install Node.js first."
         return 1
     fi
-    
-    # Install TypeScript
-    log_info "Installing TypeScript..."
-    npm install -g typescript
-    
-    # Install Playwright with browsers
-    log_info "Installing Playwright..."
-    npm install -g playwright
-    npx playwright install --with-deps
-    
+
+    if [[ "$install_typescript" == "true" ]]; then
+        log_info "Installing TypeScript..."
+        npm install -g typescript
+    else
+        log_info "TypeScript installation is disabled in config. Skipping."
+    fi
+
+    if [[ "$install_playwright" == "true" ]]; then
+        log_info "Installing Playwright..."
+        npm install -g playwright
+        npx playwright install --with-deps
+    else
+        log_info "Playwright installation is disabled in config. Skipping."
+    fi
+
     log_success "NPM global packages installed successfully"
 }
 
