@@ -21,8 +21,13 @@ set -e  # Exit on error
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPTS_DIR="$SCRIPT_DIR/scripts"
 
-# Source utilities
+# Source utilities and section scripts
 source "$SCRIPTS_DIR/utils.sh"
+source "$SCRIPTS_DIR/01-core-system.sh"
+source "$SCRIPTS_DIR/02-dev-tools.sh"
+source "$SCRIPTS_DIR/03-productivity-tools.sh"
+source "$SCRIPTS_DIR/04-system-config.sh"
+source "$SCRIPTS_DIR/05-bbb-setup.sh"
 
 # Configuration file
 CONFIG_FILE="$SCRIPT_DIR/config.yaml"
@@ -226,23 +231,23 @@ main_installation() {
 
     # Section A: Core System Setup
     log_info "Running Section A: Core System Setup"
-    bash "$SCRIPTS_DIR/01-core-system.sh" "$CONFIG_FILE"
+    setup_core_system "$CONFIG_FILE"
 
     # Section B: Development Tools
     log_info "Running Section B: Development Tools"
-    bash "$SCRIPTS_DIR/02-dev-tools.sh" "$CONFIG_FILE"
+    setup_dev_tools "$CONFIG_FILE"
 
     # Section C: Productivity Tools
     log_info "Running Section C: Productivity Tools"
-    bash "$SCRIPTS_DIR/03-productivity-tools.sh" "$CONFIG_FILE"
+    setup_productivity_tools "$CONFIG_FILE"
 
     # Section D: System Configuration
     log_info "Running Section D: System Configuration"
-    bash "$SCRIPTS_DIR/04-system-config.sh" "$CONFIG_FILE"
+    setup_system_configuration "$CONFIG_FILE"
 
     # Section E: BBB Job Setup (optional)
     log_info "Running Section E: BBB Job Setup (optional)"
-    bash "$SCRIPTS_DIR/05-bbb-setup.sh" "$CONFIG_FILE"
+    setup_bbb_job "$CONFIG_FILE"
 
     local end_time
     end_time=$(date +%s)
