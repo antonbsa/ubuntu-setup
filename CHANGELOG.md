@@ -93,7 +93,7 @@ ubuntu-setup/
 ├── config/                          # Configuration files
 │   ├── base-terminator-settings.txt # Terminator config
 │   ├── setup-a2dp-fix.sh           # Bluetooth A2DP auto-switch setup
-│   └── zsh-aliases.sh              # General ZSH aliases
+│   └── zsh_aliases.sh              # General ZSH aliases
 └── bbb/                            # BBB-specific files
     ├── aliases.sh                   # BBB aliases
     ├── terminator-settings.txt      # BBB Terminator layout

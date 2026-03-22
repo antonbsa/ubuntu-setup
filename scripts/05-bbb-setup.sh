@@ -18,7 +18,7 @@ append_bbb_aliases() {
     log_info "Appending BBB aliases to ZSH configuration..."
     
     local bbb_aliases="$SCRIPT_DIR/../bbb/aliases.sh"
-    local zsh_aliases="$HOME/.zsh-aliases.sh"
+    local zsh_aliases="$HOME/.zsh_aliases.sh"
     
     if [[ ! -f "$bbb_aliases" ]]; then
         log_error "BBB aliases file not found at $bbb_aliases"

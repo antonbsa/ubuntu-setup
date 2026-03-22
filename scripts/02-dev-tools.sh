@@ -228,25 +228,35 @@ install_terminator() {
 
 install_zsh() {
     log_info "Installing ZSH and Oh My Zsh..."
-    
+
+    local install_oh_my_zsh
+    local set_as_default_shell
+
+    install_oh_my_zsh=$(get_config_value ".workspace.zsh.install_oh_my_zsh" "$CONFIG_FILE")
+    set_as_default_shell=$(get_config_value ".workspace.zsh.set_as_default_shell" "$CONFIG_FILE")
+
     if check_and_log_installed "zsh" "ZSH"; then
         log_info "ZSH already installed"
     else
         sudo apt install -y zsh
         log_success "ZSH installed successfully"
     fi
-    
+
     # Install Oh My Zsh
-    if [[ -d "$HOME/.oh-my-zsh" ]]; then
+    if [[ "$install_oh_my_zsh" != "true" ]]; then
+        log_warning "Oh My Zsh installation is disabled in config. Skipping."
+    elif [[ -d "$HOME/.oh-my-zsh" ]]; then
         log_warning "Oh My Zsh is already installed. Skipping."
     else
         log_info "Installing Oh My Zsh..."
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
         log_success "Oh My Zsh installed successfully"
     fi
-    
+
     # Set ZSH as default shell
-    if [[ "$SHELL" != *"zsh"* ]]; then
+    if [[ "$set_as_default_shell" != "true" ]]; then
+        log_warning "Setting ZSH as the default shell is disabled in config. Skipping."
+    elif [[ "$SHELL" != *"zsh"* ]]; then
         log_info "Setting ZSH as default shell..."
         sudo chsh -s "$(which zsh)" "$USER"
         log_warning "Please log out and log back in for the shell change to take effect"

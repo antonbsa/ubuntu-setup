@@ -126,7 +126,7 @@ After the script completes:
 
 ### Adding Your Own Aliases
 
-Edit `config/zsh-aliases.sh` to add your custom shell aliases and functions.
+Edit `config/zsh_aliases.sh` to add your custom shell aliases and functions.
 
 ### Modifying GNOME Settings
 

@@ -152,7 +152,7 @@ configure_gnome() {
 setup_zsh_aliases() {
     log_info "Setting up ZSH aliases..."
 
-    local aliases_source="$SCRIPT_DIR/../config/zsh-aliases.sh"
+    local aliases_source="$SCRIPT_DIR/../config/zsh_aliases.sh"
     local zshrc_before_source="$SCRIPT_DIR/../config/zshrc-before-source.sh"
     local zshrc_after_source="$SCRIPT_DIR/../config/zshrc.sh"
     local zshrc="$HOME/.zshrc"
@@ -168,13 +168,13 @@ setup_zsh_aliases() {
     fi
 
     # Check if aliases are already sourced
-    if grep -q "source.*zsh-aliases.sh" "$zshrc"; then
+    if grep -q "source.*zsh_aliases.sh" "$zshrc"; then
         log_warning "ZSH aliases already configured in .zshrc. Skipping."
         return 0
     fi
 
     # Copy aliases file to home directory
-    cp "$aliases_source" "$HOME/.zsh-aliases.sh"
+    cp "$aliases_source" "$HOME/.zsh_aliases.sh"
 
     # Insert before-source content right before "source $ZSH/oh-my-zsh.sh"
     if [[ -f "$zshrc_before_source" ]]; then
@@ -193,8 +193,8 @@ setup_zsh_aliases() {
     cat >> "$zshrc" << 'EOF'
 
 # Custom aliases
-if [ -f ~/.zsh-aliases.sh ]; then
-    source ~/.zsh-aliases.sh
+if [ -f ~/.zsh_aliases.sh ]; then
+    source ~/.zsh_aliases.sh
 fi
 EOF
 
