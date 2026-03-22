@@ -98,50 +98,79 @@ fix_locale() {
 
 configure_gnome() {
     log_info "Configuring GNOME settings..."
-    
+
     if ! check_config_enabled ".gnome.configure" "$CONFIG_FILE"; then
         log_warning "GNOME configuration is disabled in config. Skipping."
         return 0
     fi
-    
-    # Dark mode
-    log_info "Enabling dark mode..."
-    gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
-    gsettings set org.gnome.desktop.interface gtk-theme 'Yaru-dark'
-    
-    # Power mode
+
+    local desktop_session="${XDG_CURRENT_DESKTOP:-${DESKTOP_SESSION:-}}"
+    if [[ "$desktop_session" != *"GNOME"* && "$desktop_session" != *"ubuntu:GNOME"* ]]; then
+        log_warning "GNOME is not the active desktop session. Skipping GNOME settings."
+        return 0
+    fi
+
+    local dark_mode
     local power_mode
+    local dock_icon_size
+    local suspend_timeout
+    local night_light_enabled
+    local night_light_schedule_from
+    local night_light_schedule_to
+    local night_light_temperature
+
+    dark_mode=$(get_config_value ".gnome.settings.dark_mode" "$CONFIG_FILE")
     power_mode=$(get_config_value ".gnome.settings.power_mode" "$CONFIG_FILE")
+    dock_icon_size=$(get_config_value ".gnome.settings.dock_icon_size" "$CONFIG_FILE")
+    suspend_timeout=$(get_config_value ".gnome.settings.suspend_timeout" "$CONFIG_FILE")
+    night_light_enabled=$(get_config_value ".gnome.settings.night_light.enabled" "$CONFIG_FILE")
+    night_light_schedule_from=$(get_config_value ".gnome.settings.night_light.schedule_from" "$CONFIG_FILE")
+    night_light_schedule_to=$(get_config_value ".gnome.settings.night_light.schedule_to" "$CONFIG_FILE")
+    night_light_temperature=$(get_config_value ".gnome.settings.night_light.temperature" "$CONFIG_FILE")
+
+    dark_mode=${dark_mode:-true}
     power_mode=${power_mode:-performance}
-    
+    dock_icon_size=${dock_icon_size:-30}
+    suspend_timeout=${suspend_timeout:-6000}
+    night_light_enabled=${night_light_enabled:-true}
+    night_light_schedule_from=${night_light_schedule_from:-17.5}
+    night_light_schedule_to=${night_light_schedule_to:-8.0}
+    night_light_temperature=${night_light_temperature:-3700}
+
+    if [[ "$dark_mode" == "true" ]]; then
+        log_info "Enabling dark mode..."
+        gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+        gsettings set org.gnome.desktop.interface gtk-theme 'Yaru-dark'
+    else
+        log_info "Disabling dark mode..."
+        gsettings set org.gnome.desktop.interface color-scheme 'default'
+        gsettings set org.gnome.desktop.interface gtk-theme 'Yaru'
+    fi
+
     log_info "Setting power mode to: $power_mode..."
     if command -v powerprofilesctl &> /dev/null; then
         powerprofilesctl set "$power_mode" 2>/dev/null || log_warning "Could not set power mode to $power_mode"
     else
         log_warning "powerprofilesctl not available. Install power-profiles-daemon to set power mode."
     fi
-    
-    # Icon size
-    log_info "Setting dock icon size to 30..."
-    gsettings set org.gnome.shell.extensions.dash-to-dock dash-max-icon-size 30
-    
-    # Automatic suspend: read from config
-    local suspend_timeout
-    suspend_timeout=$(get_config_value ".gnome.settings.suspend_timeout" "$CONFIG_FILE")
-    suspend_timeout=${suspend_timeout:-6000}
-    
+
+    log_info "Setting dock icon size to $dock_icon_size..."
+    gsettings set org.gnome.shell.extensions.dash-to-dock dash-max-icon-size "$dock_icon_size"
+
     log_info "Setting automatic suspend to $((suspend_timeout / 60)) minutes..."
     gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-ac-timeout "$suspend_timeout"
     gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-battery-timeout "$suspend_timeout"
-    
-    # Night light: 17:30 to 08:00, 33% warmth
+
     log_info "Configuring night light..."
-    gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true
-    gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-automatic false
-    gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-from 17.5  # 17:30
-    gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-to 8.0     # 08:00
-    gsettings set org.gnome.settings-daemon.plugins.color night-light-temperature 3700    # ~33% warmth
-    
+    gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled "$night_light_enabled"
+
+    if [[ "$night_light_enabled" == "true" ]]; then
+        gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-automatic false
+        gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-from "$night_light_schedule_from"
+        gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-to "$night_light_schedule_to"
+        gsettings set org.gnome.settings-daemon.plugins.color night-light-temperature "$night_light_temperature"
+    fi
+
     log_success "GNOME settings configured successfully"
 }
 
