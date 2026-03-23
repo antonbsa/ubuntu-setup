@@ -26,8 +26,8 @@ alias gitbu='git fetch origin; git fetch upstream; git pull upstream $(git branc
 alias gitcwip='git add --all; git commit -m "wip" --no-verify'
 alias gitremotefix='git remote rename origin upstream; git remote add origin git@github.com:antonbsa/bigbluebutton.git'
 
-# ESST
-multidev='./docker/multidev'
+# ESSR
+alias mdev='./docker/multidev'
 
 # Code review
 function checkpr() {
@@ -65,7 +65,7 @@ function checkpr() {
 }
 
 # Ubuntu
-findf='find ~/ -type f -name "$@"'
+alias findf='find ~/ -type f -name "$@"'
 
 # Random
 alias py='python3'
