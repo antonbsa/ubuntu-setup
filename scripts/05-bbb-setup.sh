@@ -316,7 +316,9 @@ append_bbb_terminator_layout() {
 
 setup_bbb_job() {
     local config_file="${1:-$HOME/ubuntu-setup/config.yaml}"
+    local failures_before failures_after
 
+    failures_before=$(get_failure_count)
     log_section "BBB JOB SETUP"
 
     if ! check_config_enabled ".bbb.enabled" "$config_file"; then
@@ -324,19 +326,24 @@ setup_bbb_job() {
         return 0
     fi
 
-    # Ask for confirmation before proceeding
     if ! ask_confirmation "Do you want to proceed with BBB job setup?"; then
         log_info "BBB job setup skipped by user."
         return 0
     fi
     
-    append_bbb_aliases
-    copy_bbb_setup_script
-    create_bbb_folders
-    clone_bbb_docker_dev
-    create_bbb_version_scripts "$config_file"
-    append_bbb_terminator_layout
-    
+    run_group_step "BBB Setup / Aliases" append_bbb_aliases
+    run_group_step "BBB Setup / Setup Script" copy_bbb_setup_script
+    run_group_step "BBB Setup / Folder Structure" create_bbb_folders
+    run_group_step "BBB Setup / Docker Dev Repository" clone_bbb_docker_dev
+    run_group_step "BBB Setup / Version Scripts" create_bbb_version_scripts "$config_file"
+    run_group_step "BBB Setup / Terminator Layout" append_bbb_terminator_layout
+
+    failures_after=$(get_failure_count)
+    if (( failures_after > failures_before )); then
+        log_warning "BBB job setup completed with failures"
+        return 1
+    fi
+
     log_success "BBB job setup completed"
 }
 

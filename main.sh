@@ -15,16 +15,14 @@
 # All operations are logged to ~/ubuntu-setup.log
 # =============================================================================
 
-set -e  # Exit on error
+set -Euo pipefail
 
-# Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPTS_DIR="$SCRIPT_DIR/scripts"
 
-# Source utilities
 source "$SCRIPTS_DIR/utils.sh"
+trap 'on_error $? $LINENO "$BASH_COMMAND"' ERR
 
-# Configuration file
 CONFIG_FILE="$SCRIPT_DIR/config.yaml"
 CONFIG_TEMPLATE="$SCRIPT_DIR/config.template.yaml"
 DRY_RUN=0
@@ -61,15 +59,9 @@ ensure_yq() {
     local arch
 
     case "$(uname -m)" in
-        x86_64)
-            arch="amd64"
-            ;;
-        aarch64|arm64)
-            arch="arm64"
-            ;;
-        armv7l)
-            arch="arm"
-            ;;
+        x86_64) arch="amd64" ;;
+        aarch64|arm64) arch="arm64" ;;
+        armv7l) arch="arm" ;;
         *)
             log_error "Unsupported architecture for automatic yq installation: $(uname -m)"
             exit 1
@@ -95,14 +87,9 @@ ensure_yq() {
     log_success "Installed yq to $install_path"
 }
 
-# =============================================================================
-# Pre-flight Checks
-# =============================================================================
-
 preflight_checks() {
     log_section "PRE-FLIGHT CHECKS"
 
-    # Check if running on Ubuntu
     if [[ ! -f /etc/os-release ]]; then
         log_error "Cannot detect OS. This script is designed for Ubuntu."
         exit 1
@@ -116,7 +103,6 @@ preflight_checks() {
 
     log_success "Running on Ubuntu $VERSION"
 
-    # Check for config file
     if [[ ! -f "$CONFIG_FILE" ]]; then
         log_warning "Config file not found at $CONFIG_FILE"
 
@@ -150,7 +136,6 @@ preflight_checks() {
         return 0
     fi
 
-    # Check for sudo access
     if ! sudo -v; then
         log_error "This script requires sudo access. Please run with a user that has sudo privileges."
         exit 1
@@ -159,15 +144,10 @@ preflight_checks() {
     log_success "Sudo access confirmed"
     ensure_yq
 
-    # Keep sudo alive
     while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
     log_success "Pre-flight checks completed"
 }
-
-# =============================================================================
-# Display Configuration Summary
-# =============================================================================
 
 display_config_summary() {
     log_section "CONFIGURATION SUMMARY"
@@ -175,67 +155,51 @@ display_config_summary() {
     echo -e "${BLUE}The following components will be installed/configured:${NC}"
     echo ""
 
-    # Parse config and display enabled options
     if check_config_enabled ".installation.common_packages" "$CONFIG_FILE"; then
         echo -e "  ${GREEN}✓${NC} Core system packages and updates"
     fi
-
     if check_config_enabled ".installation.nodejs" "$CONFIG_FILE"; then
         echo -e "  ${GREEN}✓${NC} Node.js (via NVM) and NPM packages"
     fi
-
     if check_config_enabled ".installation.docker" "$CONFIG_FILE"; then
         echo -e "  ${GREEN}✓${NC} Docker"
     fi
-
     if check_config_enabled ".installation.editors.vscode" "$CONFIG_FILE"; then
         echo -e "  ${GREEN}✓${NC} Visual Studio Code"
     fi
-
     if check_config_enabled ".installation.browsers.google_chrome" "$CONFIG_FILE"; then
         echo -e "  ${GREEN}✓${NC} Google Chrome"
     fi
-
     if check_config_enabled ".installation.terminals.terminator" "$CONFIG_FILE"; then
         echo -e "  ${GREEN}✓${NC} Terminator"
     fi
-
     if check_config_enabled ".installation.peek" "$CONFIG_FILE"; then
         echo -e "  ${GREEN}✓${NC} Peek"
     fi
-
     if check_config_enabled ".installation.insomnia" "$CONFIG_FILE"; then
         echo -e "  ${GREEN}✓${NC} Insomnia"
     fi
-
     if check_config_enabled ".installation.flameshot" "$CONFIG_FILE"; then
         echo -e "  ${GREEN}✓${NC} Flameshot"
     fi
-
     if check_config_enabled ".installation.terminal_tools.bat" "$CONFIG_FILE" ||        check_config_enabled ".installation.terminal_tools.htop" "$CONFIG_FILE" ||        check_config_enabled ".installation.terminal_tools.tmux" "$CONFIG_FILE" ||        check_config_enabled ".installation.terminal_tools.jq" "$CONFIG_FILE"; then
         echo -e "  ${GREEN}✓${NC} Terminal tools"
     fi
-
     if check_config_enabled ".installation.slack" "$CONFIG_FILE"; then
         echo -e "  ${GREEN}✓${NC} Slack"
     fi
-
     if check_config_enabled ".installation.discord" "$CONFIG_FILE"; then
         echo -e "  ${GREEN}✓${NC} Discord"
     fi
-
     if check_config_enabled ".installation.obsidian" "$CONFIG_FILE"; then
         echo -e "  ${GREEN}✓${NC} Obsidian"
     fi
-
     if check_config_enabled ".installation.vlc" "$CONFIG_FILE"; then
         echo -e "  ${GREEN}✓${NC} VLC Media Player"
     fi
-
     if check_config_enabled ".gnome.configure" "$CONFIG_FILE"; then
         echo -e "  ${GREEN}✓${NC} GNOME settings"
     fi
-
     if check_config_enabled ".git.setup" "$CONFIG_FILE"; then
         echo -e "  ${GREEN}✓${NC} Git configuration"
     fi
@@ -246,9 +210,18 @@ display_config_summary() {
     echo ""
 }
 
-# =============================================================================
-# Main Installation Flow
-# =============================================================================
+run_setup_section() {
+    local section_label="$1"
+    local script_path="$2"
+    local function_name="$3"
+
+    log_info "Running $section_label"
+    source "$script_path"
+
+    if ! "$function_name" "$CONFIG_FILE"; then
+        log_warning "$section_label completed with failures. Continuing to the next section."
+    fi
+}
 
 main_installation() {
     log_section "STARTING UBUNTU SETUP"
@@ -264,47 +237,30 @@ main_installation() {
         return 0
     fi
 
-    local start_time
+    local start_time end_time duration minutes seconds
     start_time=$(date +%s)
 
-    # Section A: Core System Setup
-    log_info "Running Section A: Core System Setup"
-    source "$SCRIPTS_DIR/01-core-system.sh"
-    setup_core_system "$CONFIG_FILE"
+    run_setup_section "Section A: Core System Setup" "$SCRIPTS_DIR/01-core-system.sh" setup_core_system
+    run_setup_section "Section B: Development Tools" "$SCRIPTS_DIR/02-dev-tools.sh" setup_dev_tools
+    run_setup_section "Section C: Productivity Tools" "$SCRIPTS_DIR/03-productivity-tools.sh" setup_productivity_tools
+    run_setup_section "Section D: System Configuration" "$SCRIPTS_DIR/04-system-config.sh" setup_system_configuration
+    run_setup_section "Section E: BBB Job Setup (optional)" "$SCRIPTS_DIR/05-bbb-setup.sh" setup_bbb_job
 
-    # Section B: Development Tools
-    log_info "Running Section B: Development Tools"
-    source "$SCRIPTS_DIR/02-dev-tools.sh"
-    setup_dev_tools "$CONFIG_FILE"
-
-    # Section C: Productivity Tools
-    log_info "Running Section C: Productivity Tools"
-    source "$SCRIPTS_DIR/03-productivity-tools.sh"
-    setup_productivity_tools "$CONFIG_FILE"
-
-    # Section D: System Configuration
-    log_info "Running Section D: System Configuration"
-    source "$SCRIPTS_DIR/04-system-config.sh"
-    setup_system_configuration "$CONFIG_FILE"
-
-    # Section E: BBB Job Setup (optional)
-    log_info "Running Section E: BBB Job Setup (optional)"
-    source "$SCRIPTS_DIR/05-bbb-setup.sh"
-    setup_bbb_job "$CONFIG_FILE"
-
-    local end_time
     end_time=$(date +%s)
-    local duration=$((end_time - start_time))
-    local minutes=$((duration / 60))
-    local seconds=$((duration % 60))
+    duration=$((end_time - start_time))
+    minutes=$((duration / 60))
+    seconds=$((duration % 60))
 
     log_section "SETUP COMPLETED"
-    log_success "Total installation time: ${minutes}m ${seconds}s"
-}
+    if [[ $(get_failure_count) -gt 0 ]]; then
+        log_warning "Total installation time: ${minutes}m ${seconds}s"
+        log_warning "Setup finished with $(get_failure_count) recorded failure(s)"
+        return 1
+    fi
 
-# =============================================================================
-# Final Summary
-# =============================================================================
+    log_success "Total installation time: ${minutes}m ${seconds}s"
+    return 0
+}
 
 final_summary() {
     log_section "SETUP SUMMARY"
@@ -314,24 +270,23 @@ final_summary() {
         return 0
     fi
 
-    # Display apps requiring user interaction
+    print_failure_summary
     print_interaction_summary
 
-    # Additional notes
     echo ""
     log_info "Next Steps:"
     echo -e "  ${BLUE}1.${NC} Log out and log back in for group changes (Docker, ZSH) to take effect"
-    echo -e "  ${BLUE}2.${NC} Review the log file for any warnings or errors: $LOG_FILE"
+    echo -e "  ${BLUE}2.${NC} Review the log file for warnings/errors: $LOG_FILE"
     echo -e "  ${BLUE}3.${NC} Sign in to applications listed above"
     echo -e "  ${BLUE}4.${NC} Bluetooth headphones will auto-switch to A2DP (high-quality) if installed"
     echo ""
 
-    log_success "Ubuntu developer setup completed successfully!"
+    if [[ $(get_failure_count) -gt 0 ]]; then
+        log_warning "Ubuntu developer setup completed with failures. Review the summary above."
+    else
+        log_success "Ubuntu developer setup completed successfully!"
+    fi
 }
-
-# =============================================================================
-# Main Execution
-# =============================================================================
 
 main() {
     parse_args "$@"
@@ -340,34 +295,25 @@ main() {
         LOG_FILE="/dev/null"
     fi
 
-    # Initialize logging
     init_log
 
-    # Welcome message
     echo ""
     echo "========================================="
     echo "  Ubuntu Developer Setup Script"
     echo "========================================="
     echo ""
 
-    # Run pre-flight checks
     preflight_checks
-
-    # Display configuration summary
     display_config_summary
 
     if ! is_dry_run; then
-        # Ask for final confirmation
         if ! ask_confirmation "Do you want to proceed with the installation?" "y"; then
             log_info "Installation cancelled by user"
             exit 0
         fi
     fi
 
-    # Run main installation
-    main_installation
-
-    # Display final summary
+    main_installation || true
     final_summary
 
     echo ""
@@ -377,5 +323,4 @@ main() {
     echo ""
 }
 
-# Execute main function
 main "$@"

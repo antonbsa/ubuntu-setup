@@ -10,7 +10,10 @@ source "$SCRIPT_DIR/utils.sh"
 
 setup_core_system() {
     local config_file="${1:-$HOME/ubuntu-setup/config.yaml}"
+    local failures_before failures_after
 
+    failures_before=$(get_failure_count)
+    set_failure_context "Core System Setup"
     log_section "CORE SYSTEM SETUP"
     
     # Check if this step is enabled in config
@@ -45,6 +48,13 @@ setup_core_system() {
     sudo apt autoclean -y
     handle_error "Failed to clean up packages"
     
+    clear_failure_context
+    failures_after=$(get_failure_count)
+    if (( failures_after > failures_before )); then
+        log_warning "Core system setup completed with failures"
+        return 1
+    fi
+
     log_success "Core system setup completed successfully"
 }
 

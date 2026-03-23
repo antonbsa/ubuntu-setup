@@ -315,17 +315,25 @@ configure_timezone() {
 
 setup_system_configuration() {
     local config_file="${1:-$HOME/ubuntu-setup/config.yaml}"
+    local failures_before failures_after
 
+    failures_before=$(get_failure_count)
     log_section "SYSTEM CONFIGURATION"
     
-    fix_bluetooth_a2dp "$config_file"
-    enable_firewall "$config_file"
-    fix_locale "$config_file"
-    configure_timezone "$config_file"
-    configure_gnome "$config_file"
-    setup_zsh_aliases
-    setup_gitconfig "$config_file"
-    
+    run_group_step "System Configuration / Bluetooth A2DP" fix_bluetooth_a2dp "$config_file"
+    run_group_step "System Configuration / Firewall" enable_firewall "$config_file"
+    run_group_step "System Configuration / Locale" fix_locale "$config_file"
+    run_group_step "System Configuration / Timezone" configure_timezone "$config_file"
+    run_group_step "System Configuration / GNOME" configure_gnome "$config_file"
+    run_group_step "System Configuration / ZSH Aliases" setup_zsh_aliases
+    run_group_step "System Configuration / Git" setup_gitconfig "$config_file"
+
+    failures_after=$(get_failure_count)
+    if (( failures_after > failures_before )); then
+        log_warning "System configuration completed with failures"
+        return 1
+    fi
+
     log_success "System configuration completed"
 }
 

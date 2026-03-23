@@ -420,21 +420,29 @@ install_npm_global_packages() {
 
 setup_dev_tools() {
     local config_file="${1:-$HOME/ubuntu-setup/config.yaml}"
+    local failures_before failures_after
 
+    failures_before=$(get_failure_count)
     log_section "DEVELOPMENT TOOLS INSTALLATION"
     
-    install_nvm "$config_file"
-    install_gh_cli
-    install_vscode "$config_file"
-    install_docker "$config_file"
-    install_chrome "$config_file"
-    install_insomnia "$config_file"
-    install_terminator "$config_file"
-    install_zsh "$config_file"
-    install_flameshot "$config_file"
-    setup_ssh_keys "$config_file"
-    install_npm_global_packages "$config_file"
-    
+    run_group_step "Development Tools / NVM" install_nvm "$config_file"
+    run_group_step "Development Tools / GitHub CLI" install_gh_cli
+    run_group_step "Development Tools / VSCode" install_vscode "$config_file"
+    run_group_step "Development Tools / Docker" install_docker "$config_file"
+    run_group_step "Development Tools / Google Chrome" install_chrome "$config_file"
+    run_group_step "Development Tools / Insomnia" install_insomnia "$config_file"
+    run_group_step "Development Tools / Terminator" install_terminator "$config_file"
+    run_group_step "Development Tools / ZSH" install_zsh "$config_file"
+    run_group_step "Development Tools / Flameshot" install_flameshot "$config_file"
+    run_group_step "Development Tools / SSH Keys" setup_ssh_keys "$config_file"
+    run_group_step "Development Tools / NPM Global Packages" install_npm_global_packages "$config_file"
+
+    failures_after=$(get_failure_count)
+    if (( failures_after > failures_before )); then
+        log_warning "Development tools installation completed with failures"
+        return 1
+    fi
+
     log_success "Development tools installation completed"
 }
 

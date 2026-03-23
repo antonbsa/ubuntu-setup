@@ -253,17 +253,25 @@ create_www_folder() {
 
 setup_productivity_tools() {
     local config_file="${1:-$HOME/ubuntu-setup/config.yaml}"
+    local failures_before failures_after
 
+    failures_before=$(get_failure_count)
     log_section "PRODUCTIVITY TOOLS INSTALLATION"
     
-    install_obsidian "$config_file"
-    install_peek "$config_file"
-    install_vlc "$config_file"
-    install_terminal_tools "$config_file"
-    install_slack "$config_file"
-    install_discord "$config_file"
-    create_www_folder "$config_file"
-    
+    run_group_step "Productivity Tools / Obsidian" install_obsidian "$config_file"
+    run_group_step "Productivity Tools / Peek" install_peek "$config_file"
+    run_group_step "Productivity Tools / VLC" install_vlc "$config_file"
+    run_group_step "Productivity Tools / Terminal Tools" install_terminal_tools "$config_file"
+    run_group_step "Productivity Tools / Slack" install_slack "$config_file"
+    run_group_step "Productivity Tools / Discord" install_discord "$config_file"
+    run_group_step "Productivity Tools / WWW Folder" create_www_folder "$config_file"
+
+    failures_after=$(get_failure_count)
+    if (( failures_after > failures_before )); then
+        log_warning "Productivity tools installation completed with failures"
+        return 1
+    fi
+
     log_success "Productivity tools installation completed"
 }
 

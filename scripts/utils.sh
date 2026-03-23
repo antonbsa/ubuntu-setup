@@ -14,6 +14,14 @@ NC='\033[0m' # No Color
 # Log file location
 LOG_FILE="${HOME}/ubuntu-setup.log"
 
+# Failure tracking
+FAILURE_CONTEXT=""
+IN_ERROR_TRAP=0
+LAST_ERROR_SIGNATURE=""
+declare -a FAILURES
+
+declare -a REQUIRES_USER_INTERACTION
+
 current_timestamp() {
     date '+%Y-%m-%d %H:%M:%S'
 }
@@ -57,6 +65,81 @@ log_section() {
 }
 
 # =============================================================================
+# Failure Tracking
+# =============================================================================
+
+set_failure_context() {
+    FAILURE_CONTEXT="$1"
+}
+
+clear_failure_context() {
+    FAILURE_CONTEXT=""
+}
+
+get_failure_count() {
+    echo "${#FAILURES[@]}"
+}
+
+record_failure() {
+    local component="$1"
+    local reason="$2"
+    local item="$component|$reason"
+
+    if [[ "$item" == "$LAST_ERROR_SIGNATURE" ]]; then
+        return 0
+    fi
+
+    LAST_ERROR_SIGNATURE="$item"
+    FAILURES+=("$item")
+    log_error "$component: $reason"
+}
+
+on_error() {
+    local exit_code="$1"
+    local line_no="$2"
+    local command="$3"
+
+    if [[ "$IN_ERROR_TRAP" == "1" || "$exit_code" == "0" ]]; then
+        return 0
+    fi
+
+    IN_ERROR_TRAP=1
+    local component="${FAILURE_CONTEXT:-Setup}"
+    record_failure "$component" "Command failed at line $line_no: $command (exit code: $exit_code)"
+    IN_ERROR_TRAP=0
+    return 0
+}
+
+run_group_step() {
+    local context="$1"
+    shift
+
+    set_failure_context "$context"
+    "$@"
+    local exit_code=$?
+    clear_failure_context
+    return $exit_code
+}
+
+print_failure_summary() {
+    if [[ ${#FAILURES[@]} -eq 0 ]]; then
+        return 0
+    fi
+
+    log_section "FAILURE SUMMARY"
+    echo -e "${YELLOW}The following steps failed during setup:${NC}"
+    echo ""
+
+    for item in "${FAILURES[@]}"; do
+        IFS='|' read -r component reason <<< "$item"
+        echo -e "  ${RED}•${NC} ${BLUE}$component${NC}: $reason"
+        echo "  • $component: $reason" >> "$LOG_FILE"
+    done
+
+    echo ""
+}
+
+# =============================================================================
 # Confirmation Functions
 # =============================================================================
 
@@ -80,7 +163,6 @@ ask_confirmation() {
         log_warning "No interactive terminal detected for confirmation prompt: $message"
     fi
 
-    # Use default if empty
     response=${response:-$default}
 
     if [[ "$response" =~ ^[Yy]$ ]]; then
@@ -187,8 +269,6 @@ handle_error() {
 # =============================================================================
 # User Interaction Tracking
 # =============================================================================
-
-declare -a REQUIRES_USER_INTERACTION
 
 add_requires_interaction() {
     local app="$1"
