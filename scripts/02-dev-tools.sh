@@ -9,16 +9,16 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/utils.sh"
 
-CONFIG_FILE="${1:-$HOME/ubuntu-setup/config.yaml}"
-
 # =============================================================================
 # NVM (Node Version Manager)
 # =============================================================================
 
 install_nvm() {
+    local config_file="$1"
+
     log_info "Installing NVM..."
     
-    if ! check_config_enabled ".installation.nodejs" "$CONFIG_FILE"; then
+    if ! check_config_enabled ".installation.nodejs" "$config_file"; then
         log_warning "Node.js installation is disabled in config. Skipping NVM."
         return 0
     fi
@@ -72,9 +72,11 @@ install_gh_cli() {
 # =============================================================================
 
 install_vscode() {
+    local config_file="$1"
+
     log_info "Installing Visual Studio Code..."
     
-    if ! check_config_enabled ".installation.editors.vscode" "$CONFIG_FILE"; then
+    if ! check_config_enabled ".installation.editors.vscode" "$config_file"; then
         log_warning "VSCode installation is disabled in config. Skipping."
         return 0
     fi
@@ -101,9 +103,11 @@ install_vscode() {
 # =============================================================================
 
 install_docker() {
+    local config_file="$1"
+
     log_info "Installing Docker..."
     
-    if ! check_config_enabled ".installation.docker" "$CONFIG_FILE"; then
+    if ! check_config_enabled ".installation.docker" "$config_file"; then
         log_warning "Docker installation is disabled in config. Skipping."
         return 0
     fi
@@ -121,10 +125,7 @@ install_docker() {
     sudo chmod a+r /etc/apt/keyrings/docker.gpg
     
     # Set up the repository
-    echo \
-      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-      sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    echo       "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu       $(. /etc/os-release && echo "$VERSION_CODENAME") stable" |       sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
     
     # Install Docker Engine
     sudo apt update
@@ -142,9 +143,11 @@ install_docker() {
 # =============================================================================
 
 install_chrome() {
+    local config_file="$1"
+
     log_info "Installing Google Chrome..."
     
-    if ! check_config_enabled ".installation.browsers.google_chrome" "$CONFIG_FILE"; then
+    if ! check_config_enabled ".installation.browsers.google_chrome" "$config_file"; then
         log_warning "Google Chrome installation is disabled in config. Skipping."
         return 0
     fi
@@ -167,9 +170,11 @@ install_chrome() {
 # =============================================================================
 
 install_insomnia() {
+    local config_file="$1"
+
     log_info "Installing Insomnia..."
 
-    if ! check_config_enabled ".installation.insomnia" "$CONFIG_FILE"; then
+    if ! check_config_enabled ".installation.insomnia" "$config_file"; then
         log_warning "Insomnia installation is disabled in config. Skipping."
         return 0
     fi
@@ -192,9 +197,11 @@ install_insomnia() {
 # =============================================================================
 
 install_terminator() {
+    local config_file="$1"
+
     log_info "Installing Terminator..."
     
-    if ! check_config_enabled ".installation.terminals.terminator" "$CONFIG_FILE"; then
+    if ! check_config_enabled ".installation.terminals.terminator" "$config_file"; then
         log_warning "Terminator installation is disabled in config. Skipping."
         return 0
     fi
@@ -207,19 +214,19 @@ install_terminator() {
     
     # Apply base configuration if it doesn't exist
     local config_dir="$HOME/.config/terminator"
-    local config_file="$config_dir/config"
+    local config_file_path="$config_dir/config"
     local base_config="$SCRIPT_DIR/../config/base-terminator-settings.txt"
     
-    if [[ ! -f "$config_file" ]]; then
+    if [[ ! -f "$config_file_path" ]]; then
         mkdir -p "$config_dir"
         if [[ -f "$base_config" ]]; then
-            cp "$base_config" "$config_file"
+            cp "$base_config" "$config_file_path"
             log_success "Applied base Terminator configuration"
         fi
     else
         if ask_confirmation "Terminator config already exists. Overwrite with base configuration?"; then
-            backup_file "$config_file"
-            cp "$base_config" "$config_file"
+            backup_file "$config_file_path"
+            cp "$base_config" "$config_file_path"
             log_success "Overwritten Terminator configuration with base settings"
         fi
     fi
@@ -232,13 +239,15 @@ install_terminator() {
 # =============================================================================
 
 install_zsh() {
+    local config_file="$1"
+
     log_info "Installing ZSH and Oh My Zsh..."
 
     local install_oh_my_zsh
     local set_as_default_shell
 
-    install_oh_my_zsh=$(get_config_value ".workspace.zsh.install_oh_my_zsh" "$CONFIG_FILE")
-    set_as_default_shell=$(get_config_value ".workspace.zsh.set_as_default_shell" "$CONFIG_FILE")
+    install_oh_my_zsh=$(get_config_value ".workspace.zsh.install_oh_my_zsh" "$config_file")
+    set_as_default_shell=$(get_config_value ".workspace.zsh.set_as_default_shell" "$config_file")
 
     if check_and_log_installed "zsh" "ZSH"; then
         log_info "ZSH already installed"
@@ -273,9 +282,11 @@ install_zsh() {
 # =============================================================================
 
 install_flameshot() {
+    local config_file="$1"
+
     log_info "Installing Flameshot..."
 
-    if ! check_config_enabled ".installation.flameshot" "$CONFIG_FILE"; then
+    if ! check_config_enabled ".installation.flameshot" "$config_file"; then
         log_warning "Flameshot installation is disabled in config. Skipping."
         return 0
     fi
@@ -310,9 +321,11 @@ install_flameshot() {
 # =============================================================================
 
 setup_ssh_keys() {
+    local config_file="$1"
+
     log_info "Setting up SSH keys..."
     
-    if ! check_config_enabled ".user.ssh.generate" "$CONFIG_FILE"; then
+    if ! check_config_enabled ".user.ssh.generate" "$config_file"; then
         log_warning "SSH key generation is disabled in config. Skipping."
         return 0
     fi
@@ -321,11 +334,11 @@ setup_ssh_keys() {
     local key_type
     local comment
     
-    key_type=$(get_config_value ".user.ssh.key_type" "$CONFIG_FILE")
+    key_type=$(get_config_value ".user.ssh.key_type" "$config_file")
     key_type=${key_type:-ed25519}
     
-    comment=$(get_config_value ".user.ssh.comment" "$CONFIG_FILE")
-    comment=${comment:-$(get_config_value ".user.github_email" "$CONFIG_FILE")}
+    comment=$(get_config_value ".user.ssh.comment" "$config_file")
+    comment=${comment:-$(get_config_value ".user.github_email" "$config_file")}
     
     local key_file="$ssh_dir/id_$key_type"
     
@@ -354,9 +367,11 @@ setup_ssh_keys() {
 # =============================================================================
 
 install_npm_global_packages() {
+    local config_file="$1"
+
     log_info "Installing NPM global packages..."
 
-    if ! check_config_enabled ".installation.nodejs" "$CONFIG_FILE"; then
+    if ! check_config_enabled ".installation.nodejs" "$config_file"; then
         log_warning "Node.js installation is disabled in config. Skipping NPM packages."
         return 0
     fi
@@ -364,8 +379,8 @@ install_npm_global_packages() {
     local install_typescript
     local install_playwright
 
-    install_typescript=$(get_config_value ".installation.npm_packages.typescript" "$CONFIG_FILE")
-    install_playwright=$(get_config_value ".installation.npm_packages.playwright" "$CONFIG_FILE")
+    install_typescript=$(get_config_value ".installation.npm_packages.typescript" "$config_file")
+    install_playwright=$(get_config_value ".installation.npm_packages.playwright" "$config_file")
 
     if [[ "$install_typescript" != "true" && "$install_playwright" != "true" ]]; then
         log_warning "All NPM global packages are disabled in config. Skipping."
@@ -404,19 +419,21 @@ install_npm_global_packages() {
 # =============================================================================
 
 setup_dev_tools() {
+    local config_file="${1:-$HOME/ubuntu-setup/config.yaml}"
+
     log_section "DEVELOPMENT TOOLS INSTALLATION"
     
-    install_nvm
+    install_nvm "$config_file"
     install_gh_cli
-    install_vscode
-    install_docker
-    install_chrome
-    install_insomnia
-    install_terminator
-    install_zsh
-    install_flameshot
-    setup_ssh_keys
-    install_npm_global_packages
+    install_vscode "$config_file"
+    install_docker "$config_file"
+    install_chrome "$config_file"
+    install_insomnia "$config_file"
+    install_terminator "$config_file"
+    install_zsh "$config_file"
+    install_flameshot "$config_file"
+    setup_ssh_keys "$config_file"
+    install_npm_global_packages "$config_file"
     
     log_success "Development tools installation completed"
 }

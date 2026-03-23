@@ -13,7 +13,10 @@ NC='\033[0m' # No Color
 
 # Log file location
 LOG_FILE="${HOME}/ubuntu-setup.log"
-TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+
+current_timestamp() {
+    date '+%Y-%m-%d %H:%M:%S'
+}
 
 # =============================================================================
 # Logging Functions
@@ -22,25 +25,25 @@ TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 log_info() {
     local message="$1"
     echo -e "${BLUE}[INFO]${NC} $message"
-    echo "[${TIMESTAMP}] [INFO] $message" >> "$LOG_FILE"
+    echo "[$(current_timestamp)] [INFO] $message" >> "$LOG_FILE"
 }
 
 log_success() {
     local message="$1"
     echo -e "${GREEN}[SUCCESS]${NC} $message"
-    echo "[${TIMESTAMP}] [SUCCESS] $message" >> "$LOG_FILE"
+    echo "[$(current_timestamp)] [SUCCESS] $message" >> "$LOG_FILE"
 }
 
 log_warning() {
     local message="$1"
     echo -e "${YELLOW}[WARNING]${NC} $message"
-    echo "[${TIMESTAMP}] [WARNING] $message" >> "$LOG_FILE"
+    echo "[$(current_timestamp)] [WARNING] $message" >> "$LOG_FILE"
 }
 
 log_error() {
     local message="$1"
     echo -e "${RED}[ERROR]${NC} $message"
-    echo "[${TIMESTAMP}] [ERROR] $message" >> "$LOG_FILE"
+    echo "[$(current_timestamp)] [ERROR] $message" >> "$LOG_FILE"
 }
 
 log_section() {
@@ -50,7 +53,7 @@ log_section() {
     echo -e "${BLUE}$message${NC}"
     echo -e "${BLUE}========================================${NC}"
     echo ""
-    echo "[${TIMESTAMP}] ======================================== $message ========================================" >> "$LOG_FILE"
+    echo "[$(current_timestamp)] ======================================== $message ========================================" >> "$LOG_FILE"
 }
 
 # =============================================================================
@@ -60,6 +63,8 @@ log_section() {
 ask_confirmation() {
     local message="$1"
     local default="${2:-n}" # Default to 'n' if not provided
+    local response=""
+    local prompt
 
     if [[ "$default" == "y" ]]; then
         prompt="[Y/n]"
@@ -68,7 +73,12 @@ ask_confirmation() {
     fi
 
     echo -e "${YELLOW}$message $prompt${NC}"
-    read -r response
+
+    if [[ -r /dev/tty ]]; then
+        read -r response < /dev/tty
+    else
+        log_warning "No interactive terminal detected for confirmation prompt: $message"
+    fi
 
     # Use default if empty
     response=${response:-$default}
@@ -212,7 +222,7 @@ is_dry_run() {
 
 init_log() {
     echo "========================================" >> "$LOG_FILE"
-    echo "Ubuntu Setup Script - Started at ${TIMESTAMP}" >> "$LOG_FILE"
+    echo "Ubuntu Setup Script - Started at $(current_timestamp)" >> "$LOG_FILE"
     echo "========================================" >> "$LOG_FILE"
     log_info "Log file: $LOG_FILE"
 }

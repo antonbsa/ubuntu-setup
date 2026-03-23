@@ -8,13 +8,13 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/utils.sh"
 
-CONFIG_FILE="${1:-$HOME/ubuntu-setup/config.yaml}"
-
 setup_core_system() {
+    local config_file="${1:-$HOME/ubuntu-setup/config.yaml}"
+
     log_section "CORE SYSTEM SETUP"
     
     # Check if this step is enabled in config
-    if ! check_config_enabled ".installation.common_packages" "$CONFIG_FILE"; then
+    if ! check_config_enabled ".installation.common_packages" "$config_file"; then
         log_warning "Common packages installation is disabled in config. Skipping."
         return 0
     fi
@@ -33,18 +33,7 @@ setup_core_system() {
     
     # Install essential base packages
     log_info "Installing essential base packages..."
-    sudo apt install -y \
-        build-essential \
-        curl \
-        wget \
-        unzip \
-        zip \
-        ca-certificates \
-        software-properties-common \
-        apt-transport-https \
-        pkg-config \
-        libssl-dev \
-        tree
+    sudo apt install -y         build-essential         curl         wget         unzip         zip         ca-certificates         software-properties-common         apt-transport-https         pkg-config         libssl-dev         tree
     
     if handle_error "Failed to install essential packages"; then
         log_success "Essential packages installed successfully"

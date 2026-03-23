@@ -98,7 +98,14 @@ done
 
 echo "[3/4] Config resolution checks"
 bash -c '
+    ROOT_DIR="'"$ROOT_DIR"'"
     source scripts/utils.sh
+    CONFIG_FILE="$ROOT_DIR/config.template.yaml"
+    source scripts/01-core-system.sh
+    source scripts/02-dev-tools.sh
+    source scripts/03-productivity-tools.sh
+    source scripts/04-system-config.sh
+    source scripts/05-bbb-setup.sh
 
     [[ "$(get_config_value ".installation.nodejs" config.template.yaml)" == "true" ]]
     [[ "$(get_config_value ".workspace.zsh.install_oh_my_zsh" config.template.yaml)" == "true" ]]
@@ -106,6 +113,7 @@ bash -c '
 
     check_config_enabled ".installation.flameshot" config.template.yaml
     ! check_config_enabled ".bbb.enabled" config.template.yaml
+    [[ "$CONFIG_FILE" == "$ROOT_DIR/config.template.yaml" ]]
 '
 
 echo "[4/4] Dry-run smoke test"

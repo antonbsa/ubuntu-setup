@@ -8,16 +8,16 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/utils.sh"
 
-CONFIG_FILE="${1:-$HOME/ubuntu-setup/config.yaml}"
-
 # =============================================================================
 # Fix Bluetooth Headphones (A2DP Auto-Switch)
 # =============================================================================
 
 fix_bluetooth_a2dp() {
+    local config_file="$1"
+
     log_info "Setting up Bluetooth A2DP auto-switch service..."
     
-    if ! check_config_enabled ".security.bluetooth_a2dp_fix" "$CONFIG_FILE"; then
+    if ! check_config_enabled ".security.bluetooth_a2dp_fix" "$config_file"; then
         log_warning "Bluetooth A2DP fix is disabled in config. Skipping."
         return 0
     fi
@@ -50,9 +50,11 @@ fix_bluetooth_a2dp() {
 # =============================================================================
 
 enable_firewall() {
+    local config_file="$1"
+
     log_info "Enabling firewall (UFW)..."
     
-    if ! check_config_enabled ".security.enable_firewall" "$CONFIG_FILE"; then
+    if ! check_config_enabled ".security.enable_firewall" "$config_file"; then
         log_warning "Firewall setup is disabled in config. Skipping."
         return 0
     fi
@@ -74,10 +76,12 @@ enable_firewall() {
 # =============================================================================
 
 fix_locale() {
+    local config_file="$1"
+
     log_info "Configuring system locale..."
     
     local desired_locale
-    desired_locale=$(get_config_value ".system.localization.locale" "$CONFIG_FILE")
+    desired_locale=$(get_config_value ".system.localization.locale" "$config_file")
     desired_locale=${desired_locale:-en_US.UTF-8}
     
     # Generate locale if not present
@@ -97,9 +101,11 @@ fix_locale() {
 # =============================================================================
 
 configure_gnome() {
+    local config_file="$1"
+
     log_info "Configuring GNOME settings..."
 
-    if ! check_config_enabled ".gnome.configure" "$CONFIG_FILE"; then
+    if ! check_config_enabled ".gnome.configure" "$config_file"; then
         log_warning "GNOME configuration is disabled in config. Skipping."
         return 0
     fi
@@ -119,14 +125,14 @@ configure_gnome() {
     local night_light_schedule_to
     local night_light_temperature
 
-    dark_mode=$(get_config_value ".gnome.settings.dark_mode" "$CONFIG_FILE")
-    power_mode=$(get_config_value ".gnome.settings.power_mode" "$CONFIG_FILE")
-    dock_icon_size=$(get_config_value ".gnome.settings.dock_icon_size" "$CONFIG_FILE")
-    suspend_timeout=$(get_config_value ".gnome.settings.suspend_timeout" "$CONFIG_FILE")
-    night_light_enabled=$(get_config_value ".gnome.settings.night_light.enabled" "$CONFIG_FILE")
-    night_light_schedule_from=$(get_config_value ".gnome.settings.night_light.schedule_from" "$CONFIG_FILE")
-    night_light_schedule_to=$(get_config_value ".gnome.settings.night_light.schedule_to" "$CONFIG_FILE")
-    night_light_temperature=$(get_config_value ".gnome.settings.night_light.temperature" "$CONFIG_FILE")
+    dark_mode=$(get_config_value ".gnome.settings.dark_mode" "$config_file")
+    power_mode=$(get_config_value ".gnome.settings.power_mode" "$config_file")
+    dock_icon_size=$(get_config_value ".gnome.settings.dock_icon_size" "$config_file")
+    suspend_timeout=$(get_config_value ".gnome.settings.suspend_timeout" "$config_file")
+    night_light_enabled=$(get_config_value ".gnome.settings.night_light.enabled" "$config_file")
+    night_light_schedule_from=$(get_config_value ".gnome.settings.night_light.schedule_from" "$config_file")
+    night_light_schedule_to=$(get_config_value ".gnome.settings.night_light.schedule_to" "$config_file")
+    night_light_temperature=$(get_config_value ".gnome.settings.night_light.temperature" "$config_file")
 
     dark_mode=${dark_mode:-true}
     power_mode=${power_mode:-performance}
@@ -213,7 +219,7 @@ setup_zsh_aliases() {
             sed -i "$((source_line_num - 1))r $zshrc_before_source" "$zshrc"
         else
             log_warning "Could not find 'source \$ZSH/oh-my-zsh.sh' in .zshrc. Appending before-source content at the end."
-            printf '\n' >> "$zshrc"
+            printf '\\n' >> "$zshrc"
             cat "$zshrc_before_source" >> "$zshrc"
         fi
     fi
@@ -228,7 +234,7 @@ fi
 EOF
 
     if [[ -f "$zshrc_after_source" ]]; then
-        printf '\n' >> "$zshrc"
+        printf '\\n' >> "$zshrc"
         cat "$zshrc_after_source" >> "$zshrc"
     fi
 
@@ -240,9 +246,11 @@ EOF
 # =============================================================================
 
 setup_gitconfig() {
+    local config_file="$1"
+
     log_info "Configuring Git..."
     
-    if ! check_config_enabled ".git.setup" "$CONFIG_FILE"; then
+    if ! check_config_enabled ".git.setup" "$config_file"; then
         log_warning "Git configuration is disabled in config. Skipping."
         return 0
     fi
@@ -251,9 +259,9 @@ setup_gitconfig() {
     local git_email
     local git_branch
     
-    git_name=$(get_config_value ".user.name" "$CONFIG_FILE")
-    git_email=$(get_config_value ".user.github_email" "$CONFIG_FILE")
-    git_branch=$(get_config_value ".git.default_branch" "$CONFIG_FILE")
+    git_name=$(get_config_value ".user.name" "$config_file")
+    git_email=$(get_config_value ".user.github_email" "$config_file")
+    git_branch=$(get_config_value ".git.default_branch" "$config_file")
     
     git_name=${git_name:-Anton B}
     git_branch=${git_branch:-main}
@@ -285,10 +293,12 @@ setup_gitconfig() {
 # =============================================================================
 
 configure_timezone() {
+    local config_file="$1"
+
     log_info "Configuring timezone..."
     
     local timezone
-    timezone=$(get_config_value ".system.localization.timezone" "$CONFIG_FILE")
+    timezone=$(get_config_value ".system.localization.timezone" "$config_file")
     
     if [[ -n "$timezone" ]]; then
         log_info "Setting timezone to: $timezone"
@@ -304,15 +314,17 @@ configure_timezone() {
 # =============================================================================
 
 setup_system_configuration() {
+    local config_file="${1:-$HOME/ubuntu-setup/config.yaml}"
+
     log_section "SYSTEM CONFIGURATION"
     
-    fix_bluetooth_a2dp
-    enable_firewall
-    fix_locale
-    configure_timezone
-    configure_gnome
+    fix_bluetooth_a2dp "$config_file"
+    enable_firewall "$config_file"
+    fix_locale "$config_file"
+    configure_timezone "$config_file"
+    configure_gnome "$config_file"
     setup_zsh_aliases
-    setup_gitconfig
+    setup_gitconfig "$config_file"
     
     log_success "System configuration completed"
 }

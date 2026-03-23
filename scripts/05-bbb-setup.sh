@@ -8,8 +8,6 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/utils.sh"
 
-CONFIG_FILE="${1:-$HOME/ubuntu-setup/config.yaml}"
-
 # =============================================================================
 # Append BBB Aliases to ZSH
 # =============================================================================
@@ -138,6 +136,8 @@ get_bbb_versions() {
 # =============================================================================
 
 create_bbb_version_scripts() {
+    local config_file="$1"
+
     log_info "Checking available BBB versions..."
     
     local versions
@@ -157,7 +157,14 @@ create_bbb_version_scripts() {
     echo "Available: $versions"
     echo "Example: v3.0 v3.1"
     echo "Or type 'all' to set up all versions"
-    read -r selected_versions
+
+    local selected_versions=""
+    if [[ -r /dev/tty ]]; then
+        read -r selected_versions < /dev/tty
+    else
+        log_warning "No interactive terminal detected. Defaulting to all configured BBB versions."
+        selected_versions="all"
+    fi
     
     if [[ "$selected_versions" == "all" ]]; then
         selected_versions="$versions"
@@ -169,7 +176,7 @@ create_bbb_version_scripts() {
     local cpu_count
     local cpu_max
     
-    cpu_limit=$(get_config_value ".bbb.container.cpu_limit" "$CONFIG_FILE")
+    cpu_limit=$(get_config_value ".bbb.container.cpu_limit" "$config_file")
     cpu_limit=${cpu_limit:-auto}
     
     cpu_count=$(nproc)
@@ -184,7 +191,7 @@ create_bbb_version_scripts() {
     
     # Get ulimit configuration
     local ulimit_nofile
-    ulimit_nofile=$(get_config_value ".bbb.container.ulimit_nofile" "$CONFIG_FILE")
+    ulimit_nofile=$(get_config_value ".bbb.container.ulimit_nofile" "$config_file")
     ulimit_nofile=${ulimit_nofile:-5000}
     
     # Read additional container setup parameters
@@ -202,7 +209,7 @@ create_bbb_version_scripts() {
     
     # Create script for each selected version
     for version in $selected_versions; do
-        create_version_script "$version" "$additional_params"
+        create_version_script "$version" "$additional_params" "$config_file"
     done
     
     log_success "BBB version-specific scripts created"
@@ -215,6 +222,7 @@ create_bbb_version_scripts() {
 create_version_script() {
     local version="$1"
     local additional_params="$2"
+    local config_file="$3"
     
     # Convert version to short format (v3.0 -> 30)
     local version_short
@@ -222,7 +230,7 @@ create_version_script() {
     
     # Get username suffix from config
     local username_suffix
-    username_suffix=$(get_config_value ".bbb.container.username_suffix" "$CONFIG_FILE")
+    username_suffix=$(get_config_value ".bbb.container.username_suffix" "$config_file")
     username_suffix=${username_suffix:-anton}
     
     local script_name="create_bbb${version_short}.sh"
@@ -246,8 +254,8 @@ cd "\$HOME/www/bbb/bbb-docker-dev" || exit 1
 git checkout "$version"
 
 # Run the create_bbb.sh script with additional parameters
-./create_bbb.sh \\
-    $additional_params \\
+./create_bbb.sh \
+    $additional_params \
     "$container_name"
 
 echo "BBB $version container '$container_name' created successfully!"
@@ -307,9 +315,11 @@ append_bbb_terminator_layout() {
 # =============================================================================
 
 setup_bbb_job() {
+    local config_file="${1:-$HOME/ubuntu-setup/config.yaml}"
+
     log_section "BBB JOB SETUP"
 
-    if ! check_config_enabled ".bbb.enabled" "$CONFIG_FILE"; then
+    if ! check_config_enabled ".bbb.enabled" "$config_file"; then
         log_info "BBB job setup is disabled in config. Skipping."
         return 0
     fi
@@ -324,7 +334,7 @@ setup_bbb_job() {
     copy_bbb_setup_script
     create_bbb_folders
     clone_bbb_docker_dev
-    create_bbb_version_scripts
+    create_bbb_version_scripts "$config_file"
     append_bbb_terminator_layout
     
     log_success "BBB job setup completed"

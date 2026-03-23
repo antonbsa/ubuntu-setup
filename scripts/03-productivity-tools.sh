@@ -8,16 +8,16 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/utils.sh"
 
-CONFIG_FILE="${1:-$HOME/ubuntu-setup/config.yaml}"
-
 # =============================================================================
 # Obsidian
 # =============================================================================
 
 install_obsidian() {
+    local config_file="$1"
+
     log_info "Installing Obsidian..."
     
-    if ! check_config_enabled ".installation.obsidian" "$CONFIG_FILE"; then
+    if ! check_config_enabled ".installation.obsidian" "$config_file"; then
         log_warning "Obsidian installation is disabled in config. Skipping."
         return 0
     fi
@@ -50,7 +50,7 @@ EOF
     
     # Clone obsidian-notes repository if URL provided
     local obsidian_repo_url
-    obsidian_repo_url=$(get_config_value ".workspace.repositories.obsidian_notes" "$CONFIG_FILE")
+    obsidian_repo_url=$(get_config_value ".workspace.repositories.obsidian_notes" "$config_file")
     
     if [[ -n "$obsidian_repo_url" ]]; then
         local vault_path="$HOME/www/personal/obsidian-notes"
@@ -78,9 +78,11 @@ EOF
 # =============================================================================
 
 install_peek() {
+    local config_file="$1"
+
     log_info "Installing Peek..."
 
-    if ! check_config_enabled ".installation.peek" "$CONFIG_FILE"; then
+    if ! check_config_enabled ".installation.peek" "$config_file"; then
         log_warning "Peek installation is disabled in config. Skipping."
         return 0
     fi
@@ -99,9 +101,11 @@ install_peek() {
 # =============================================================================
 
 install_vlc() {
+    local config_file="$1"
+
     log_info "Installing VLC Media Player..."
     
-    if ! check_config_enabled ".installation.vlc" "$CONFIG_FILE"; then
+    if ! check_config_enabled ".installation.vlc" "$config_file"; then
         log_warning "VLC installation is disabled in config. Skipping."
         return 0
     fi
@@ -120,13 +124,15 @@ install_vlc() {
 # =============================================================================
 
 install_terminal_tools() {
+    local config_file="$1"
+
     log_info "Installing terminal tools..."
 
     local tools=("bat" "htop" "tmux" "jq")
     local enabled_tools=()
 
     for tool in "${tools[@]}"; do
-        if check_config_enabled ".installation.terminal_tools.${tool}" "$CONFIG_FILE"; then
+        if check_config_enabled ".installation.terminal_tools.${tool}" "$config_file"; then
             enabled_tools+=("$tool")
         fi
     done
@@ -153,9 +159,11 @@ install_terminal_tools() {
 # =============================================================================
 
 install_slack() {
+    local config_file="$1"
+
     log_info "Installing Slack..."
     
-    if ! check_config_enabled ".installation.slack" "$CONFIG_FILE"; then
+    if ! check_config_enabled ".installation.slack" "$config_file"; then
         log_warning "Slack installation is disabled in config. Skipping."
         return 0
     fi
@@ -178,9 +186,11 @@ install_slack() {
 # =============================================================================
 
 install_discord() {
+    local config_file="$1"
+
     log_info "Installing Discord..."
     
-    if ! check_config_enabled ".installation.discord" "$CONFIG_FILE"; then
+    if ! check_config_enabled ".installation.discord" "$config_file"; then
         log_warning "Discord installation is disabled in config. Skipping."
         return 0
     fi
@@ -203,9 +213,11 @@ install_discord() {
 # =============================================================================
 
 create_www_folder() {
+    local config_file="$1"
+
     log_info "Creating www folder structure..."
     
-    if ! check_config_enabled ".workspace.create_www_folder" "$CONFIG_FILE"; then
+    if ! check_config_enabled ".workspace.create_www_folder" "$config_file"; then
         log_warning "WWW folder creation is disabled in config. Skipping."
         return 0
     fi
@@ -240,15 +252,17 @@ create_www_folder() {
 # =============================================================================
 
 setup_productivity_tools() {
+    local config_file="${1:-$HOME/ubuntu-setup/config.yaml}"
+
     log_section "PRODUCTIVITY TOOLS INSTALLATION"
     
-    install_obsidian
-    install_peek
-    install_vlc
-    install_terminal_tools
-    install_slack
-    install_discord
-    create_www_folder
+    install_obsidian "$config_file"
+    install_peek "$config_file"
+    install_vlc "$config_file"
+    install_terminal_tools "$config_file"
+    install_slack "$config_file"
+    install_discord "$config_file"
+    create_www_folder "$config_file"
     
     log_success "Productivity tools installation completed"
 }
