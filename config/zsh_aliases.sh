@@ -2,8 +2,24 @@
 # TODO: log all aliases (+their commands maybe)
 # TODO: log alias command
 # TODO: update aliases from this gist
-alias upall='sudo apt update && sudo apt full-upgrade -y && sudo apt autoremove -y'
 alias cleanup-snaps='snap list --all | awk '\''/disabled/{print $1, $3}'\'' | while read snapname revision; do sudo snap remove "$snapname" --revision="$revision"; done'
+upall() {
+  # Use --full to run apt full-upgrade instead of the default apt upgrade
+  local upgrade_cmd="upgrade"
+
+  if [ "$1" = "--full" ]; then
+    upgrade_cmd="full-upgrade"
+  elif [ -n "$1" ]; then
+    echo "Use: upall [--full]"
+    return 1
+  fi
+
+  sudo apt update &&
+  sudo apt "$upgrade_cmd" -y &&
+  sudo apt autoremove -y &&
+  sudo apt autoclean &&
+  sudo snap refresh
+}
 
 # Codex
 export EDITOR="code --wait"
