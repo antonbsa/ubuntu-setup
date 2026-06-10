@@ -62,7 +62,7 @@ function checkpr() {
 
 	CURRENT_BRANCH=$(git branch --show-current) || return;	# throw error if it's not in a git reporsitory
 
-	if [[ "$CURRENT_BRANCH" != *"release"* && "$CURRENT_BRANCH" != "develop" ]] then
+	if [[ "$CURRENT_BRANCH" != *"release"* && "$CURRENT_BRANCH" != "develop" && "$CURRENT_BRANCH" != "main" ]] then
 		echo "ERROR: Not in a base branch, currently at "\"$CURRENT_BRANCH"\""
 		return;
 	fi;
