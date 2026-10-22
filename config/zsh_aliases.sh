@@ -19,6 +19,14 @@ upall() {
   sudo apt autoremove -y &&
   sudo apt autoclean &&
   sudo snap refresh
+
+  command -v flatpak >/dev/null && flatpak update -y
+  command -v fwupdmgr >/dev/null && { fwupdmgr refresh --force; fwupdmgr update; }
+
+  if [ -f /var/run/reboot-required ]; then
+    echo "⚠️  Reinicialização necessária:"
+    cat /var/run/reboot-required.pkgs 2>/dev/null
+  fi
 }
 
 # Codex
