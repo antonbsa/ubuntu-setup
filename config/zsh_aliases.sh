@@ -29,6 +29,24 @@ upall() {
   fi
 }
 
+# List scheduled cron jobs: user crontab + every file in /etc/cron.d (only active lines).
+# Files installed by packages (e.g. e2scrub_all) are hidden; use `crons -a` to include them.
+# `crontab -l` alone doesn't show /etc/cron.d - see https://github.com/antonbsa/crons
+__crons_print() {
+  local out
+  out=$(grep -Ev '^\s*(#|$)|^[A-Z_]+=')
+  [ -n "$out" ] && printf '\033[1m%s\033[0m\n%s\n\n' "$1" "$out"
+}
+
+crons() {
+  local f
+  crontab -l 2>/dev/null | __crons_print "crontab ($USER)"
+  for f in /etc/cron.d/*(N.); do
+    [ "$1" = "-a" ] || ! dpkg -S "$f" >/dev/null 2>&1 || continue
+    __crons_print "$f" < "$f"
+  done
+}
+
 # Codex
 export EDITOR="code --wait"
 export VISUAL="code --wait"
