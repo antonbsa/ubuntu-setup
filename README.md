@@ -23,6 +23,7 @@ A comprehensive, automated setup script for configuring a fresh Ubuntu installat
   - [Adding Your Own Aliases](#adding-your-own-aliases)
   - [Modifying GNOME Settings](#modifying-gnome-settings)
   - [Adding New Software](#adding-new-software)
+  - [Secrets / API tokens](#secrets--api-tokens)
 - [Logging](#-logging)
 - [Troubleshooting](#-troubleshooting)
   - [Script fails with permission error](#script-fails-with-permission-error)
@@ -143,6 +144,13 @@ Edit `scripts/04-system-config.sh` in the `configure_gnome()` function.
 1. Add installation function to appropriate script in `scripts/`
 2. Add configuration option to `config.template.yaml`
 3. Call the function from the script's main function
+
+### Secrets / API tokens
+
+- **Global tokens** go in `~/.config/secrets/env.zsh` as `export NAME="value"` lines. The setup creates it (mode 600, outside any repo) and `~/.zshrc` sources it.
+- **Project-only tokens** go in that project's own gitignored `.env.local`.
+- Keep each value in your password manager too.
+- Never put tokens in `~/.zshrc` or in this repo.
 
 ## ✅ Validation
 
