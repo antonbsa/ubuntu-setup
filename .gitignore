@@ -3,6 +3,7 @@ config.yaml
 
 # Secrets
 .env*
+!.env.development
 *.secret
 secrets/
 
