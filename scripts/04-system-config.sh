@@ -242,6 +242,49 @@ EOF
 }
 
 # =============================================================================
+# Secrets File
+# =============================================================================
+
+setup_secrets_file() {
+    log_info "Setting up secrets file..."
+
+    local secrets_dir="$HOME/.config/secrets"
+    local secrets_file="$secrets_dir/env.zsh"
+    local zshrc="$HOME/.zshrc"
+
+    install -d -m 700 "$secrets_dir"
+
+    if [[ -f "$secrets_file" ]]; then
+        log_warning "Secrets file already exists at $secrets_file. Keeping it."
+    else
+        install -m 600 /dev/null "$secrets_file"
+        cat > "$secrets_file" << 'EOF_SECRETS'
+# Global API tokens, sourced by ~/.zshrc. Never commit this file; keep each value in the password manager too.
+# export CLOUDFLARE_API_TOKEN="..."
+EOF_SECRETS
+        log_success "Secrets file created at $secrets_file"
+    fi
+
+    if [[ ! -f "$zshrc" ]]; then
+        log_warning ".zshrc not found. Creating..."
+        touch "$zshrc"
+    fi
+
+    if grep -q "secrets/env.zsh" "$zshrc"; then
+        log_warning "Secrets file already sourced in .zshrc. Skipping."
+        return 0
+    fi
+
+    cat >> "$zshrc" << 'EOF_ZSHRC'
+
+# Global API tokens (kept outside any repo)
+[ -f ~/.config/secrets/env.zsh ] && source ~/.config/secrets/env.zsh
+EOF_ZSHRC
+
+    log_success "Secrets file sourced from .zshrc"
+}
+
+# =============================================================================
 # Git Configuration
 # =============================================================================
 
@@ -326,6 +369,7 @@ setup_system_configuration() {
     run_group_step "System Configuration / Timezone" configure_timezone "$config_file"
     run_group_step "System Configuration / GNOME" configure_gnome "$config_file"
     run_group_step "System Configuration / ZSH Aliases" setup_zsh_aliases
+    run_group_step "System Configuration / Secrets file" setup_secrets_file
     run_group_step "System Configuration / Git" setup_gitconfig "$config_file"
 
     failures_after=$(get_failure_count)

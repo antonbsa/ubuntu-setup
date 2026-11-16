@@ -17,9 +17,9 @@ upall() {
   sudo apt update &&
   sudo apt "$upgrade_cmd" -y &&
   sudo apt autoremove -y &&
-  sudo apt autoclean &&
-  sudo snap refresh
+  sudo apt autoclean
 
+  command -v snap >/dev/null && sudo snap refresh
   command -v flatpak >/dev/null && flatpak update -y
   command -v fwupdmgr >/dev/null && { fwupdmgr refresh --force; fwupdmgr update; }
 

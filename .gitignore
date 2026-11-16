@@ -1,6 +1,12 @@
 # User configuration (contains personal data)
 config.yaml
 
+# Secrets
+.env*
+!.env.development
+*.secret
+secrets/
+
 # Log files
 *.log
 ubuntu-setup.log
